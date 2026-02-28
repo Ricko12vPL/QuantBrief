@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, timezone
 
 
@@ -26,6 +26,14 @@ class FilingAnalysis(BaseModel):
     financial_highlights: list[FinancialHighlight] = Field(default_factory=list)
     risk_factors: list[str] = Field(default_factory=list)
     key_metrics: dict[str, str] = Field(default_factory=dict)
+
+    @field_validator("key_metrics", mode="before")
+    @classmethod
+    def coerce_metrics_to_str(cls, v: dict) -> dict[str, str]:
+        if isinstance(v, dict):
+            return {k: str(val) for k, val in v.items()}
+        return v
+
     management_outlook: str = ""
     notable_changes: list[str] = Field(default_factory=list)
     sentiment: str = "neutral"
