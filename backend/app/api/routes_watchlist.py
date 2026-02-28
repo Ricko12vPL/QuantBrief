@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
+from app.data_sources.finnhub_client import search_symbols
 from app.models.watchlist import Watchlist, WatchlistItem
 
 router = APIRouter()
@@ -10,6 +11,12 @@ _watchlist = Watchlist(items=[
     WatchlistItem(ticker="AAPL", company_name="Apple Inc."),
     WatchlistItem(ticker="MSFT", company_name="Microsoft Corporation"),
 ])
+
+
+@router.get("/search")
+async def search_tickers(q: str = Query(min_length=1, max_length=50)):
+    results = await search_symbols(q)
+    return {"results": results}
 
 
 @router.get("")

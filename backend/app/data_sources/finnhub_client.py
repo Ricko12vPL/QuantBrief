@@ -86,3 +86,30 @@ async def get_company_news(
     if isinstance(data, list):
         return data[:20]
     return []
+
+
+async def search_symbols(query: str) -> list[dict]:
+    """Search for stock symbols by name or ticker."""
+    data = await _fetch("search", {"q": query}, cache_ttl=300)
+    results = data.get("result", []) if isinstance(data, dict) else []
+    return [
+        {"symbol": r["symbol"], "description": r["description"], "type": r.get("type", "")}
+        for r in results if r.get("type") == "Common Stock"
+    ][:8]
+
+
+async def get_candles(ticker: str, resolution: str = "D", days: int = 90) -> list[dict]:
+    """Get OHLCV candle data from Finnhub."""
+    to_ts = int(datetime.now(timezone.utc).timestamp())
+    from_ts = to_ts - (days * 86400)
+    data = await _fetch(
+        "stock/candle",
+        {"symbol": ticker, "resolution": resolution, "from": from_ts, "to": to_ts},
+        cache_ttl=300,
+    )
+    if not isinstance(data, dict) or data.get("s") != "ok":
+        return []
+    return [
+        {"date": ts, "open": o, "high": h, "low": l, "close": c, "volume": v}
+        for ts, o, h, l, c, v in zip(data["t"], data["o"], data["h"], data["l"], data["c"], data["v"])
+    ]

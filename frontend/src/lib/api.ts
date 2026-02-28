@@ -34,6 +34,8 @@ export const api = {
       }),
     remove: (ticker: string) =>
       fetchJSON<any>(`/watchlist/${ticker}`, { method: 'DELETE' }),
+    search: (q: string) =>
+      fetchJSON<any>(`/watchlist/search?q=${encodeURIComponent(q)}`),
   },
   filing: {
     get: (ticker: string) => fetchJSON<any>(`/filing/${ticker}`),
@@ -77,5 +79,33 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ script, language }),
       }),
+  },
+  market: {
+    getCandles: (ticker: string, resolution = 'D', days = 90) =>
+      fetchJSON<any>(`/market/${ticker}/candles?resolution=${resolution}&days=${days}`),
+    getTechnical: (ticker: string) =>
+      fetchJSON<any>(`/market/${ticker}/technical`),
+    analyzeTechnical: (ticker: string, question = '') =>
+      fetchJSON<any>(`/market/${ticker}/analyze-technical`, {
+        method: 'POST',
+        body: JSON.stringify({ question }),
+      }),
+    getRatios: (ticker: string) =>
+      fetchJSON<any>(`/market/${ticker}/ratios`),
+  },
+  portfolio: {
+    get: () => fetchJSON<any>('/portfolio'),
+    add: (ticker: string, shares: number, avgPrice: number, companyName = '') =>
+      fetchJSON<any>('/portfolio', {
+        method: 'POST',
+        body: JSON.stringify({
+          ticker,
+          shares,
+          avg_price: avgPrice,
+          company_name: companyName,
+        }),
+      }),
+    remove: (ticker: string) =>
+      fetchJSON<any>(`/portfolio/${ticker}`, { method: 'DELETE' }),
   },
 }

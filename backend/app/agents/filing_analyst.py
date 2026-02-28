@@ -44,7 +44,7 @@ class FilingAnalystAgent:
         )
         return [filing for batch in results for filing in batch]
 
-    async def analyze_filing(self, filing: SECFiling) -> FilingAnalysis:
+    async def analyze_filing(self, filing: SECFiling, language: str = "en") -> FilingAnalysis:
         """Download and analyze a full SEC filing."""
         filing_text = await get_filing_text(filing.filing_url)
         if not filing_text:
@@ -64,6 +64,7 @@ class FilingAnalystAgent:
                     {
                         "role": "user",
                         "content": (
+                            f"Language: {language}\n\n"
                             f"Analyze this {filing.form_type} filing for "
                             f"{filing.ticker} ({filing.company_name}), "
                             f"filed on {filing.filing_date.strftime('%Y-%m-%d')}:\n\n"

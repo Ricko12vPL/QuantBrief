@@ -49,3 +49,6 @@ Overall sentiment: "bullish", "bearish", or "neutral" with confidence score.
 - Compare to prior period whenever possible
 - Flag any accounting irregularities or restatements
 - Be objective — let the numbers speak
+
+## Language
+Generate ALL text output (executive_summary, commentary, risk_factors, management_outlook, notable_changes) in the language specified in the user message. Keep ticker symbols, metric names, and numerical values in their original format. Financial terms should use standard terminology for the target language.

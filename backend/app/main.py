@@ -12,6 +12,8 @@ from app.api.routes_watchlist import router as watchlist_router
 from app.api.routes_filing import router as filing_router
 from app.api.routes_audio import router as audio_router
 from app.api.ws_realtime import router as ws_router
+from app.api.routes_market import router as market_router
+from app.api.routes_portfolio import router as portfolio_router
 
 
 @asynccontextmanager
@@ -46,6 +48,8 @@ app.include_router(watchlist_router, prefix="/api/watchlist", tags=["Watchlist"]
 app.include_router(filing_router, prefix="/api/filing", tags=["Filing"])
 app.include_router(audio_router, prefix="/api/audio", tags=["Audio"])
 app.include_router(ws_router, prefix="/api/ws", tags=["WebSocket"])
+app.include_router(market_router, prefix="/api/market", tags=["Market"])
+app.include_router(portfolio_router, prefix="/api/portfolio", tags=["Portfolio"])
 
 
 @app.get("/api/health")

@@ -91,7 +91,7 @@ class PipelineOrchestrator:
         filing_analyses = []
         for i, filing in enumerate(filings[:5]):
             analysis = await self._safe(
-                self.filing_analyst.analyze_filing(filing), None
+                self.filing_analyst.analyze_filing(filing, language=language), None
             )
             if analysis:
                 filing_analyses.append(analysis)
