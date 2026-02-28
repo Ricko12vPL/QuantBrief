@@ -1,6 +1,6 @@
 import httpx
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.utils.rate_limiter import FINNHUB_LIMITER
 from app.utils.cache import get_cache
@@ -17,8 +17,8 @@ async def _fetch(endpoint: str, params: dict, cache_ttl: int = 600) -> dict | li
         logger.warning("Finnhub API key not set")
         return {}
 
-    params["token"] = settings.finnhub_api_key
     cache_key = f"finnhub:{endpoint}:{sorted(params.items())}"
+    request_params = {**params, "token": settings.finnhub_api_key}
     cache = get_cache(settings.redis_url)
 
     cached = await cache.get(cache_key)
@@ -27,7 +27,7 @@ async def _fetch(endpoint: str, params: dict, cache_ttl: int = 600) -> dict | li
 
     async with FINNHUB_LIMITER:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(f"{BASE_URL}/{endpoint}", params=params, timeout=10)
+            resp = await client.get(f"{BASE_URL}/{endpoint}", params=request_params, timeout=10)
             if resp.status_code != 200:
                 logger.error("Finnhub fetch failed: %d", resp.status_code)
                 return {}
@@ -58,9 +58,9 @@ async def get_earnings_calendar(
 ) -> list[dict]:
     """Get upcoming earnings."""
     if not from_date:
-        from_date = datetime.utcnow().strftime("%Y-%m-%d")
+        from_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     if not to_date:
-        to_date = (datetime.utcnow() + timedelta(days=30)).strftime("%Y-%m-%d")
+        to_date = (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d")
 
     data = await _fetch("calendar/earnings", {
         "from": from_date,
@@ -75,8 +75,8 @@ async def get_company_news(
     ticker: str, days_back: int = 7
 ) -> list[dict]:
     """Get recent company news."""
-    to_date = datetime.utcnow().strftime("%Y-%m-%d")
-    from_date = (datetime.utcnow() - timedelta(days=days_back)).strftime("%Y-%m-%d")
+    to_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    from_date = (datetime.now(timezone.utc) - timedelta(days=days_back)).strftime("%Y-%m-%d")
 
     data = await _fetch("company-news", {
         "symbol": ticker,

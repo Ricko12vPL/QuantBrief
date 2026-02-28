@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     model_analysis: str = "mistral-large-latest"
     model_reasoning: str = "magistral-medium-latest"
     model_synthesis: str = "mistral-large-latest"
-    model_transcription: str = "mistral-large-latest"
+    model_transcription: str = "mistral-small-latest"  # Override to voxtral in .env
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

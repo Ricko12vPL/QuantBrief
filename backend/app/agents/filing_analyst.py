@@ -76,7 +76,7 @@ class FilingAnalystAgent:
             )
 
             latency = (time.time() - start) * 1000
-            result_text = response.choices[0].message.content
+            result_text = response.choices[0].message.content or ""
             usage = response.usage
 
             log_agent_call(
@@ -115,6 +115,6 @@ class FilingAnalystAgent:
             )
             return FilingAnalysis(
                 filing=filing,
-                executive_summary=f"Analysis failed: {e}",
+                executive_summary="Analysis could not be completed",
                 relevance_score=0.3,
             )

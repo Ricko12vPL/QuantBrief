@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from app.data_sources.finnhub_client import get_earnings_calendar
 
@@ -32,9 +31,10 @@ async def get_earnings_surprises(ticker: str | None = None) -> list[dict]:
             "eps_estimate": estimate,
             "surprise_pct": round(surprise_pct, 2) if surprise_pct is not None else None,
             "surprise_direction": (
-                "beat" if surprise_pct and surprise_pct > 0
-                else "miss" if surprise_pct and surprise_pct < 0
-                else "inline"
+                "beat" if surprise_pct is not None and surprise_pct > 0
+                else "miss" if surprise_pct is not None and surprise_pct < 0
+                else "inline" if surprise_pct is not None
+                else "unknown"
             ),
             "revenue_actual": entry.get("revenueActual"),
             "revenue_estimate": entry.get("revenueEstimate"),

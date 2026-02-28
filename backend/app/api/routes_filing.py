@@ -88,9 +88,13 @@ async def analyze_earnings_call(
 
     tmp_path: str | None = None
     try:
-        content = await file.read()
-        if len(content) > 100 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="File too large (max 100MB)")
+        chunks, total = [], 0
+        async for chunk in file:
+            total += len(chunk)
+            if total > 100 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="File too large (max 100MB)")
+            chunks.append(chunk)
+        content = b"".join(chunks)
 
         with tempfile.NamedTemporaryFile(
             suffix=suffix, delete=False

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
-from app.utils.wandb_logger import init_wandb
+from app.utils.wandb_logger import init_wandb, finish as wandb_finish
 from app.api.routes_brief import router as brief_router
 from app.api.routes_watchlist import router as watchlist_router
 from app.api.routes_filing import router as filing_router
@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
     audio_path.mkdir(parents=True, exist_ok=True)
     init_wandb(project=settings.wandb_project, api_key=settings.wandb_api_key)
     yield
+    wandb_finish()
 
 
 app = FastAPI(
@@ -38,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static", check_dir=False), name="static")
 
 app.include_router(brief_router, prefix="/api/brief", tags=["Brief"])
 app.include_router(watchlist_router, prefix="/api/watchlist", tags=["Watchlist"])

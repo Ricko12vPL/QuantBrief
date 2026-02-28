@@ -14,7 +14,7 @@ interface LanguageSelectorProps {
 }
 
 export default function LanguageSelector({ onChange }: LanguageSelectorProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const handleChange = (lang: string) => {
     i18n.changeLanguage(lang)
@@ -27,6 +27,7 @@ export default function LanguageSelector({ onChange }: LanguageSelectorProps) {
       <select
         value={i18n.language}
         onChange={(e) => handleChange(e.target.value)}
+        aria-label={t('language')}
         className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-sm text-white outline-none focus:border-[#FF7000]"
       >
         {languages.map((lang) => (

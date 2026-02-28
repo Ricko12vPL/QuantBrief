@@ -37,6 +37,7 @@ export default function WatchlistManager() {
         />
         <button
           onClick={handleAdd}
+          aria-label={t('add_ticker')}
           className="flex items-center gap-1 rounded-lg bg-[#FF7000] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#FF7000]/80"
         >
           <Plus className="h-4 w-4" />
@@ -54,6 +55,7 @@ export default function WatchlistManager() {
             )}
             <button
               onClick={() => remove(item.ticker)}
+              aria-label={`${t('remove_ticker')} ${item.ticker}`}
               className="ml-1 text-zinc-600 transition hover:text-red-400"
             >
               <X className="h-3.5 w-3.5" />

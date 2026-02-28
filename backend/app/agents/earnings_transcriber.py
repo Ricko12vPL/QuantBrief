@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import logging
@@ -46,8 +47,11 @@ class EarningsTranscriberAgent:
         suffix = path.suffix.lower()
         mime_type = SUPPORTED_AUDIO_TYPES.get(suffix, "audio/mp3")
 
-        with open(audio_path, "rb") as f:
-            audio_b64 = base64.b64encode(f.read()).decode()
+        def _read_audio():
+            with open(audio_path, "rb") as f:
+                return base64.b64encode(f.read()).decode()
+
+        audio_b64 = await asyncio.to_thread(_read_audio)
 
         start = time.time()
         try:
@@ -78,7 +82,7 @@ class EarningsTranscriberAgent:
             )
 
             latency = (time.time() - start) * 1000
-            transcript = response.choices[0].message.content
+            transcript = response.choices[0].message.content or ""
             usage = response.usage
 
             log_agent_call(
@@ -124,7 +128,7 @@ class EarningsTranscriberAgent:
             )
 
             latency = (time.time() - start) * 1000
-            result_text = response.choices[0].message.content
+            result_text = response.choices[0].message.content or ""
             usage = response.usage
 
             log_agent_call(
@@ -165,7 +169,7 @@ class EarningsTranscriberAgent:
             return EarningsCallAnalysis(
                 ticker=ticker.upper(),
                 transcript=transcript,
-                summary=f"Analysis failed: {e}",
+                summary="Analysis could not be completed",
             )
 
     async def transcribe_and_analyze(

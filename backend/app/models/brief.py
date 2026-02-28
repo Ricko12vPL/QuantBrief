@@ -1,7 +1,7 @@
 import uuid
 
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.signal import MarketSignal
 from app.models.filing import FilingAnalysis
 
@@ -46,7 +46,7 @@ class IntelligenceBrief(BaseModel):
     audio_script: str = ""
     audio_url: str = ""
     language: str = "en"
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     watchlist_tickers: list[str] = Field(default_factory=list)
     overall_sentiment: str = "neutral"
     confidence_score: float = Field(ge=0.0, le=1.0, default=0.5)

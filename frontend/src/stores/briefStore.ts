@@ -2,15 +2,75 @@ import { create } from 'zustand'
 import { api } from '../lib/api'
 import { connectPipelineWS } from '../lib/websocket'
 
+interface MaterialEvent {
+  ticker: string
+  event_type: string
+  headline: string
+  impact_assessment: string
+  confidence: number
+  sentiment: string
+  title?: string
+  summary?: string
+  source?: string
+  relevance_score?: number
+  published_at?: string
+}
+
+interface FilingAnalysis {
+  filing: {
+    ticker: string
+    company_name: string
+    form_type: string
+    filing_date: string
+  }
+  executive_summary: string
+  financial_highlights: { metric: string; current_value: string; previous_value: string; change_pct: number | null; commentary: string }[]
+  risk_factors: string[]
+  key_metrics: Record<string, string>
+  management_outlook: string
+  notable_changes: string[]
+  sentiment: string
+  relevance_score: number
+}
+
+interface Signal {
+  ticker: string
+  title: string
+  summary: string
+  relevance_score: number
+  sentiment: string
+  signal_type: string
+}
+
+interface ActionItem {
+  action: string
+  ticker: string
+  urgency: string
+  rationale: string
+}
+
+interface RiskAlert {
+  ticker: string
+  risk_type: string
+  description: string
+  severity: string
+  risk?: string
+}
+
+interface ReasoningStep {
+  stage: string
+  content: string
+}
+
 interface Brief {
   id: string
   executive_summary: string
-  material_events: any[]
-  filing_analyses: any[]
-  signals: any[]
-  action_items: any[]
-  risk_alerts: any[]
-  reasoning_chain: any[]
+  material_events: MaterialEvent[]
+  filing_analyses: FilingAnalysis[]
+  signals: Signal[]
+  action_items: ActionItem[]
+  risk_alerts: RiskAlert[]
+  reasoning_chain: ReasoningStep[]
   audio_script: string
   audio_url: string
   language: string

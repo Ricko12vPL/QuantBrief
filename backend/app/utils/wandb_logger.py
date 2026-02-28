@@ -38,7 +38,6 @@ def log_agent_call(
     success: bool = True,
 ):
     log_metrics({
-        f"{agent_name}/model": model,
         f"{agent_name}/input_tokens": input_tokens,
         f"{agent_name}/output_tokens": output_tokens,
         f"{agent_name}/latency_ms": latency_ms,

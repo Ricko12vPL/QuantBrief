@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class FinancialHighlight(BaseModel):
@@ -30,4 +30,4 @@ class FilingAnalysis(BaseModel):
     notable_changes: list[str] = Field(default_factory=list)
     sentiment: str = "neutral"
     relevance_score: float = Field(ge=0.0, le=1.0, default=0.5)
-    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

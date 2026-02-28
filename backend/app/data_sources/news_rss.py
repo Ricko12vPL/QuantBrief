@@ -1,6 +1,7 @@
 import asyncio
 import logging
-from datetime import datetime
+import re
+from datetime import datetime, timezone
 
 import feedparser
 
@@ -31,14 +32,15 @@ async def fetch_feeds(
                 link = entry.get("link", "")
                 published = entry.get("published_parsed")
                 pub_dt = (
-                    datetime(*published[:6]) if published else datetime.utcnow()
+                    datetime(*published[:6]) if published else datetime.now(timezone.utc)
                 )
 
                 # Try to match tickers
                 matched_ticker = ""
                 if tickers_upper:
+                    text = f"{title} {summary}".upper()
                     for t in tickers_upper:
-                        if t in title.upper() or t in summary.upper():
+                        if re.search(rf'\b{re.escape(t)}\b', text):
                             matched_ticker = t
                             break
 

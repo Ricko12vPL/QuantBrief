@@ -21,5 +21,17 @@ frontend/dist/
 # Audio output
 backend/static/audio/*.mp3
 
+# Databases
+*.sqlite
+*.db
+
+# Logs
+*.log
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
 # W&B
 wandb/

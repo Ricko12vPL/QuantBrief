@@ -100,7 +100,7 @@ export default function MarketOverview({ signals, tickers }: MarketOverviewProps
 
               <div className="mt-1 flex items-center justify-between">
                 <span className="text-xs text-zinc-500">
-                  {data.signalCount} {data.signalCount === 1 ? 'signal' : 'signals'}
+                  {data.signalCount} {data.signalCount === 1 ? t('market_signal') : t('market_signals')}
                 </span>
                 <span className={`text-sm font-medium ${changeColor}`}>
                   {isPositive ? '+' : ''}{data.dailyChangeAbs.toFixed(2)} ({isPositive ? '+' : ''}{data.dailyChangePct.toFixed(2)}%)

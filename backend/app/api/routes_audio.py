@@ -10,6 +10,7 @@ router = APIRouter()
 
 class GenerateAudioRequest(BaseModel):
     language: str = "en"
+    script: str = ""
 
 
 @router.get("/latest")
@@ -30,9 +31,12 @@ async def get_latest_audio() -> dict:
 async def generate_audio(body: GenerateAudioRequest) -> dict:
     """Generate audio from the latest brief's script."""
     from app.api.routes_brief import _briefs
-    if not _briefs:
-        raise HTTPException(status_code=404, detail="No brief available")
-    script = _briefs[-1].audio_script
+    script = body.script.strip() if body.script.strip() else None
+
+    if not script:
+        if not _briefs:
+            raise HTTPException(status_code=404, detail="No brief available")
+        script = _briefs[-1].audio_script
 
     if not script:
         raise HTTPException(status_code=400, detail="No script provided")

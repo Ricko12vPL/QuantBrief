@@ -11,4 +11,3 @@ python-dotenv==1.0.1
 python-multipart==0.0.20
 aiosqlite==0.20.0
 redis==5.2.1
-websockets==14.2

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 class SignalType(str, Enum):
@@ -23,5 +23,5 @@ class MarketSignal(BaseModel):
     source: str
     signal_type: SignalType
     url: str = ""
-    published_at: datetime = Field(default_factory=datetime.utcnow)
+    published_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     raw_data: dict = Field(default_factory=dict)

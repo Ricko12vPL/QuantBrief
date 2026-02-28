@@ -63,20 +63,20 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
               </span>
             </div>
 
-            <Section title="Executive Summary" defaultOpen>
+            <Section title={t('executive_summary')} defaultOpen>
               <p className="text-sm leading-relaxed text-zinc-300">{analysis.executive_summary}</p>
             </Section>
 
             {analysis.financial_highlights.length > 0 && (
-              <Section title="Financial Highlights">
+              <Section title={t('filing_financial_highlights')}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs text-zinc-500">
-                        <th className="pb-2 pr-4">Metric</th>
-                        <th className="pb-2 pr-4">Current</th>
-                        <th className="pb-2 pr-4">Previous</th>
-                        <th className="pb-2">Change</th>
+                        <th className="pb-2 pr-4">{t('filing_metric')}</th>
+                        <th className="pb-2 pr-4">{t('filing_current')}</th>
+                        <th className="pb-2 pr-4">{t('filing_previous')}</th>
+                        <th className="pb-2">{t('filing_change')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -97,7 +97,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
             )}
 
             {analysis.risk_factors.length > 0 && (
-              <Section title={`Risk Factors (${analysis.risk_factors.length})`}>
+              <Section title={`${t('filing_risk_factors')} (${analysis.risk_factors.length})`}>
                 <ul className="space-y-1">
                   {analysis.risk_factors.map((r, j) => (
                     <li key={j} className="flex gap-2 text-sm text-zinc-400">
@@ -110,7 +110,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
             )}
 
             {Object.keys(analysis.key_metrics).length > 0 && (
-              <Section title="Key Metrics">
+              <Section title={t('filing_key_metrics')}>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(analysis.key_metrics).map(([key, val]) => (
                     <div key={key} className="rounded bg-zinc-800/50 p-2">
@@ -123,7 +123,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
             )}
 
             {analysis.management_outlook && (
-              <Section title="Management Outlook">
+              <Section title={t('filing_management_outlook')}>
                 <p className="text-sm text-zinc-400">{analysis.management_outlook}</p>
               </Section>
             )}

@@ -68,6 +68,7 @@ function Section({
 }
 
 function SentimentBadge({ sentiment, confidence }: { sentiment: string; confidence: number }) {
+  const { t } = useTranslation()
   const colorMap: Record<string, string> = {
     bullish: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20',
     bearish: 'bg-red-400/10 text-red-400 border-red-400/20',
@@ -81,14 +82,14 @@ function SentimentBadge({ sentiment, confidence }: { sentiment: string; confiden
         {sentiment}
       </span>
       <span className="text-xs text-zinc-500">
-        {(confidence * 100).toFixed(0)}% confidence
+        {(confidence * 100).toFixed(0)}% {t('confidence').toLowerCase()}
       </span>
     </div>
   )
 }
 
 export default function EarningsCallUpload() {
-  useTranslation()
+  const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [ticker, setTicker] = useState('')
@@ -191,7 +192,7 @@ export default function EarningsCallUpload() {
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
           <Mic className="h-5 w-5 text-[#FF7000]" />
-          Earnings Call Analysis
+          {t('earnings_call_analysis')}
           <span className="rounded bg-[#FF7000]/10 px-2 py-0.5 text-xs font-medium text-[#FF7000]">
             Voxtral
           </span>
@@ -232,6 +233,7 @@ export default function EarningsCallUpload() {
                   e.stopPropagation()
                   clearFile()
                 }}
+                aria-label={t('earnings_clear_file')}
                 className="ml-2 rounded p-1 text-zinc-500 hover:bg-zinc-700 hover:text-white"
               >
                 <X className="h-4 w-4" />
@@ -241,10 +243,10 @@ export default function EarningsCallUpload() {
             <>
               <Upload className="mb-3 h-10 w-10 text-zinc-500" />
               <p className="text-sm text-zinc-400">
-                Drag and drop an audio file, or click to browse
+                {t('earnings_drag_drop')}
               </p>
               <p className="mt-1 text-xs text-zinc-600">
-                Supports MP3, WAV, M4A, OGG, FLAC (max 100MB)
+                {t('earnings_supported_formats')}
               </p>
             </>
           )}
@@ -254,7 +256,7 @@ export default function EarningsCallUpload() {
         <div className="mt-4 flex gap-3">
           <input
             type="text"
-            placeholder="Ticker (e.g. NVDA)"
+            placeholder={t('earnings_ticker_placeholder')}
             value={ticker}
             onChange={(e) => setTicker(e.target.value.toUpperCase())}
             maxLength={10}
@@ -268,12 +270,12 @@ export default function EarningsCallUpload() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Analyzing...
+                {t('earnings_analyzing')}
               </>
             ) : (
               <>
                 <Mic className="h-4 w-4" />
-                Analyze
+                {t('earnings_analyze')}
               </>
             )}
           </button>
@@ -291,11 +293,11 @@ export default function EarningsCallUpload() {
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <Loader2 className="h-4 w-4 animate-spin text-[#FF7000]" />
-              <span>Step 1: Transcribing audio with Voxtral...</span>
+              <span>{t('earnings_step_transcribing')}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-600">
               <div className="h-4 w-4" />
-              <span>Step 2: Analyzing transcript with Mistral Large 3...</span>
+              <span>{t('earnings_step_analyzing')}</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
               <div className="h-full animate-pulse rounded-full bg-[#FF7000]/50" style={{ width: '60%' }} />
@@ -310,19 +312,19 @@ export default function EarningsCallUpload() {
           <div className="mb-4 flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
               <FileAudio className="h-5 w-5 text-[#FF7000]" />
-              {analysis.ticker} Earnings Call Analysis
+              {analysis.ticker} {t('earnings_call_analysis')}
             </h3>
             <SentimentBadge sentiment={analysis.sentiment} confidence={analysis.confidence_score} />
           </div>
 
           {/* Summary */}
-          <Section title="Summary" icon={Target} iconColor="text-[#FF7000]" defaultOpen>
+          <Section title={t('earnings_summary')} icon={Target} iconColor="text-[#FF7000]" defaultOpen>
             <p className="text-sm leading-relaxed text-zinc-300">{analysis.summary}</p>
           </Section>
 
           {/* Key Topics */}
           {analysis.key_topics.length > 0 && (
-            <Section title={`Key Topics (${analysis.key_topics.length})`} icon={Target} iconColor="text-blue-400" defaultOpen>
+            <Section title={`${t('earnings_key_topics')} (${analysis.key_topics.length})`} icon={Target} iconColor="text-blue-400" defaultOpen>
               <div className="flex flex-wrap gap-2">
                 {analysis.key_topics.map((topic, i) => (
                   <span
@@ -338,15 +340,15 @@ export default function EarningsCallUpload() {
 
           {/* Financial Highlights */}
           {analysis.financial_highlights.length > 0 && (
-            <Section title="Financial Highlights" icon={TrendingUp} iconColor="text-emerald-400">
+            <Section title={t('earnings_financial_highlights')} icon={TrendingUp} iconColor="text-emerald-400">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-zinc-500">
-                      <th className="pb-2 pr-4">Metric</th>
-                      <th className="pb-2 pr-4">Value</th>
-                      <th className="pb-2 pr-4">Comparison</th>
-                      <th className="pb-2">Commentary</th>
+                      <th className="pb-2 pr-4">{t('earnings_metric')}</th>
+                      <th className="pb-2 pr-4">{t('earnings_value')}</th>
+                      <th className="pb-2 pr-4">{t('earnings_comparison')}</th>
+                      <th className="pb-2">{t('earnings_commentary')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -366,7 +368,7 @@ export default function EarningsCallUpload() {
 
           {/* Forward Guidance */}
           {analysis.forward_guidance.length > 0 && (
-            <Section title={`Forward Guidance (${analysis.forward_guidance.length})`} icon={TrendingUp} iconColor="text-cyan-400">
+            <Section title={`${t('earnings_forward_guidance')} (${analysis.forward_guidance.length})`} icon={TrendingUp} iconColor="text-cyan-400">
               <ul className="space-y-1">
                 {analysis.forward_guidance.map((g, j) => (
                   <li key={j} className="flex gap-2 text-sm text-zinc-400">
@@ -380,7 +382,7 @@ export default function EarningsCallUpload() {
 
           {/* Risk Factors */}
           {analysis.risk_factors.length > 0 && (
-            <Section title={`Risk Factors (${analysis.risk_factors.length})`} icon={AlertTriangle} iconColor="text-red-400">
+            <Section title={`${t('earnings_risk_factors')} (${analysis.risk_factors.length})`} icon={AlertTriangle} iconColor="text-red-400">
               <ul className="space-y-1">
                 {analysis.risk_factors.map((r, j) => (
                   <li key={j} className="flex gap-2 text-sm text-zinc-400">
@@ -394,7 +396,7 @@ export default function EarningsCallUpload() {
 
           {/* Q&A Highlights */}
           {analysis.qa_highlights.length > 0 && (
-            <Section title={`Q&A Highlights (${analysis.qa_highlights.length})`} icon={MessageSquare} iconColor="text-purple-400">
+            <Section title={`${t('earnings_qa_highlights')} (${analysis.qa_highlights.length})`} icon={MessageSquare} iconColor="text-purple-400">
               <div className="space-y-3">
                 {analysis.qa_highlights.map((qa, j) => (
                   <div key={j} className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-3">
@@ -417,7 +419,7 @@ export default function EarningsCallUpload() {
 
           {/* Transcript (collapsed by default) */}
           {analysis.transcript && (
-            <Section title="Full Transcript" icon={FileAudio} iconColor="text-zinc-500">
+            <Section title={t('earnings_full_transcript')} icon={FileAudio} iconColor="text-zinc-500">
               <div className="max-h-96 overflow-y-auto rounded-lg bg-zinc-800/50 p-4">
                 <pre className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-400">
                   {analysis.transcript}

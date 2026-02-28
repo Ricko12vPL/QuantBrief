@@ -1,20 +1,21 @@
+import asyncio
 import logging
 
-from app.data_sources.alpha_vantage import _fetch
+from app.data_sources.alpha_vantage import fetch
 
 logger = logging.getLogger(__name__)
 
 
 async def get_rsi(ticker: str, interval: str = "daily", period: int = 14) -> list[dict]:
     """Get RSI (Relative Strength Index) from Alpha Vantage."""
-    data = await _fetch({
+    data = await fetch({
         "function": "RSI",
         "symbol": ticker,
         "interval": interval,
         "time_period": str(period),
         "series_type": "close",
     })
-    series_key = f"Technical Analysis: RSI"
+    series_key = "Technical Analysis: RSI"
     series = data.get(series_key, {})
     return [
         {"date": date, "rsi": float(vals.get("RSI", 0))}
@@ -24,7 +25,7 @@ async def get_rsi(ticker: str, interval: str = "daily", period: int = 14) -> lis
 
 async def get_macd(ticker: str, interval: str = "daily") -> list[dict]:
     """Get MACD from Alpha Vantage."""
-    data = await _fetch({
+    data = await fetch({
         "function": "MACD",
         "symbol": ticker,
         "interval": interval,
@@ -45,7 +46,7 @@ async def get_macd(ticker: str, interval: str = "daily") -> list[dict]:
 
 async def get_bollinger_bands(ticker: str, interval: str = "daily") -> list[dict]:
     """Get Bollinger Bands from Alpha Vantage."""
-    data = await _fetch({
+    data = await fetch({
         "function": "BBANDS",
         "symbol": ticker,
         "interval": interval,
@@ -67,7 +68,10 @@ async def get_bollinger_bands(ticker: str, interval: str = "daily") -> list[dict
 
 async def get_technical_summary(ticker: str) -> dict:
     """Get a summary of key technical indicators."""
-    rsi_data = await get_rsi(ticker)
+    rsi_data, macd_data = await asyncio.gather(
+        get_rsi(ticker),
+        get_macd(ticker),
+    )
     latest_rsi = rsi_data[0]["rsi"] if rsi_data else 50.0
 
     rsi_signal = "neutral"
@@ -75,8 +79,6 @@ async def get_technical_summary(ticker: str) -> dict:
         rsi_signal = "overbought"
     elif latest_rsi < 30:
         rsi_signal = "oversold"
-
-    macd_data = await get_macd(ticker)
     macd_signal = "neutral"
     if macd_data:
         hist = macd_data[0]["histogram"]

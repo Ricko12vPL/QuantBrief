@@ -34,8 +34,11 @@ class Cache:
         self._redis = None
         self._fallback = InMemoryCache()
         self._redis_url = redis_url
+        self._redis_failed = False
 
     async def _get_redis(self):
+        if self._redis_failed:
+            return None
         if self._redis is None and self._redis_url:
             try:
                 import redis.asyncio as aioredis
@@ -44,6 +47,7 @@ class Cache:
             except Exception:
                 logger.warning("Redis unavailable, using in-memory cache")
                 self._redis = None
+                self._redis_failed = True
         return self._redis
 
     async def get(self, key: str) -> Any | None:
@@ -84,4 +88,10 @@ def get_cache(redis_url: str = "") -> Cache:
     global _cache
     if _cache is None:
         _cache = Cache(redis_url)
+    elif redis_url and redis_url != _cache._redis_url:
+        logger.warning(
+            "get_cache called with redis_url=%s but singleton already exists with redis_url=%s",
+            redis_url,
+            _cache._redis_url,
+        )
     return _cache

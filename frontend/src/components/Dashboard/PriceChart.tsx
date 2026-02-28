@@ -110,6 +110,7 @@ export default function PriceChart({ prices, ticker }: PriceChartProps) {
               fontSize: '12px',
             }}
             labelFormatter={(label: unknown) => new Date(String(label)).toLocaleDateString()}
+            // Recharts v3 formatter type workaround
             formatter={((value: unknown, name: unknown) => {
               const v = Number(value) || 0
               if (name === 'close') return [formatPrice(v), 'Price']

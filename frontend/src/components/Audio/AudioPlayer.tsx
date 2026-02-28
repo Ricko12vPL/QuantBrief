@@ -75,6 +75,7 @@ export default function AudioPlayer({ audioUrl, script }: AudioPlayerProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={togglePlay}
+          aria-label={playing ? t('pause') : t('play')}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF7000] text-white transition hover:bg-[#FF7000]/80"
         >
           {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
@@ -102,6 +103,7 @@ export default function AudioPlayer({ audioUrl, script }: AudioPlayerProps) {
         <a
           href={audioUrl}
           download
+          aria-label={t('download')}
           className="flex h-8 w-8 items-center justify-center rounded bg-zinc-800 text-zinc-400 transition hover:text-white"
         >
           <Download className="h-4 w-4" />

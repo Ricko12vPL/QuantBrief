@@ -124,7 +124,7 @@ class ReasoningAgent:
                 ) from fallback_err
 
         latency = (time.time() - start) * 1000
-        result_text = response.choices[0].message.content
+        result_text = response.choices[0].message.content or ""
         usage = response.usage
 
         log_agent_call(
@@ -148,23 +148,55 @@ class ReasoningAgent:
                 "confidence_score": 0.3,
             }
 
+        reasoning_steps = []
+        for step in parsed.get("reasoning_steps", []):
+            try:
+                reasoning_steps.append(ReasoningStep(**step))
+            except Exception:
+                reasoning_steps.append(ReasoningStep(
+                    stage=step.get("stage", "UNKNOWN"),
+                    content=step.get("content", ""),
+                ))
+
+        material_events = []
+        for evt in parsed.get("material_events", []):
+            try:
+                material_events.append(MaterialEvent(**evt))
+            except Exception:
+                material_events.append(MaterialEvent(
+                    ticker=evt.get("ticker", "UNKNOWN"),
+                    event_type=evt.get("event_type", "unknown"),
+                    headline=evt.get("headline", ""),
+                    impact_assessment=evt.get("impact_assessment", ""),
+                    confidence=float(evt.get("confidence", 0.5)),
+                ))
+
+        action_items = []
+        for item in parsed.get("action_items", []):
+            try:
+                action_items.append(ActionItem(**item))
+            except Exception:
+                action_items.append(ActionItem(
+                    action=item.get("action", ""),
+                    ticker=item.get("ticker", "UNKNOWN"),
+                ))
+
+        risk_alerts = []
+        for alert in parsed.get("risk_alerts", []):
+            try:
+                risk_alerts.append(RiskAlert(**alert))
+            except Exception:
+                risk_alerts.append(RiskAlert(
+                    ticker=alert.get("ticker", "UNKNOWN"),
+                    risk_type=alert.get("risk_type", "unknown"),
+                    description=alert.get("description", ""),
+                ))
+
         return {
-            "reasoning_steps": [
-                ReasoningStep(**step)
-                for step in parsed.get("reasoning_steps", [])
-            ],
-            "material_events": [
-                MaterialEvent(**evt)
-                for evt in parsed.get("material_events", [])
-            ],
-            "action_items": [
-                ActionItem(**item)
-                for item in parsed.get("action_items", [])
-            ],
-            "risk_alerts": [
-                RiskAlert(**alert)
-                for alert in parsed.get("risk_alerts", [])
-            ],
+            "reasoning_steps": reasoning_steps,
+            "material_events": material_events,
+            "action_items": action_items,
+            "risk_alerts": risk_alerts,
             "overall_sentiment": parsed.get("overall_sentiment", "neutral"),
             "confidence_score": parsed.get("confidence_score", 0.5),
         }

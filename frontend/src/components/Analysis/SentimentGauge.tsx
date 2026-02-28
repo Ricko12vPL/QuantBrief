@@ -5,7 +5,7 @@ interface SentimentGaugeProps {
 }
 
 export default function SentimentGauge({ value, label, size = 120 }: SentimentGaugeProps) {
-  const normalized = (value + 1) / 2 // 0 to 1
+  const normalized = Math.min(0.99, Math.max(0.01, (value + 1) / 2)) // clamped to [0.01, 0.99] to prevent empty/full arc
   const r = size / 2 - 10
   const cx = size / 2
   const cy = size / 2

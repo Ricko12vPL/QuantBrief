@@ -1,5 +1,6 @@
 import httpx
 import logging
+import re
 from datetime import datetime
 
 from app.models.filing import SECFiling
@@ -71,8 +72,7 @@ async def get_recent_filings(
             if resp.status_code != 200:
                 logger.error("SEC submissions fetch failed: %d", resp.status_code)
                 return []
-
-    data = resp.json()
+            data = resp.json()
     company_name = data.get("name", ticker)
     recent = data.get("filings", {}).get("recent", {})
 
@@ -117,7 +117,6 @@ async def get_filing_text(filing_url: str, max_chars: int = 200000) -> str:
                 return ""
             text = resp.text
             # Strip HTML tags for plain text
-            import re
             text = re.sub(r'<[^>]+>', ' ', text)
             text = re.sub(r'\s+', ' ', text).strip()
             return text[:max_chars]

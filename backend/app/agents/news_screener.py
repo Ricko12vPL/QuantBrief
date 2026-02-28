@@ -78,7 +78,7 @@ class NewsScreenerAgent:
             )
 
             latency = (time.time() - start) * 1000
-            result_text = response.choices[0].message.content
+            result_text = response.choices[0].message.content or ""
             usage = response.usage
 
             log_agent_call(
@@ -97,6 +97,16 @@ class NewsScreenerAgent:
                 idx = item.get("original_index", 0)
                 if idx < len(signals):
                     original = signals[idx]
+                    try:
+                        sentiment = Sentiment(item.get("sentiment", "neutral"))
+                    except ValueError:
+                        sentiment = Sentiment.NEUTRAL
+
+                    try:
+                        signal_type = SignalType(item.get("signal_type", "news"))
+                    except ValueError:
+                        signal_type = SignalType.NEWS
+
                     updated = MarketSignal(
                         ticker=item.get("matched_tickers", [original.ticker])[0]
                         if item.get("matched_tickers")
@@ -104,13 +114,9 @@ class NewsScreenerAgent:
                         title=original.title,
                         summary=item.get("one_line_summary", original.summary),
                         relevance_score=item.get("relevance_score", 0.5),
-                        sentiment=Sentiment(
-                            item.get("sentiment", "neutral")
-                        ),
+                        sentiment=sentiment,
                         source=original.source,
-                        signal_type=SignalType(
-                            item.get("signal_type", "news")
-                        ),
+                        signal_type=signal_type,
                         url=original.url,
                         published_at=original.published_at,
                         raw_data=original.raw_data,

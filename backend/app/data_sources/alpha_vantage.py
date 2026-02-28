@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://www.alphavantage.co/query"
 
 
-async def _fetch(params: dict, cache_ttl: int = 3600) -> dict:
+async def fetch(params: dict, cache_ttl: int = 3600) -> dict:
     """Fetch from Alpha Vantage with caching (25 req/day limit!)."""
     settings = get_settings()
     if not settings.alpha_vantage_api_key:
@@ -41,7 +41,7 @@ async def _fetch(params: dict, cache_ttl: int = 3600) -> dict:
 
 async def get_quote(ticker: str) -> dict:
     """Get current quote for a ticker."""
-    data = await _fetch({
+    data = await fetch({
         "function": "GLOBAL_QUOTE",
         "symbol": ticker,
     })
@@ -60,7 +60,7 @@ async def get_quote(ticker: str) -> dict:
 
 async def get_daily_prices(ticker: str, outputsize: str = "compact") -> list[dict]:
     """Get daily price history."""
-    data = await _fetch({
+    data = await fetch({
         "function": "TIME_SERIES_DAILY",
         "symbol": ticker,
         "outputsize": outputsize,
@@ -81,7 +81,7 @@ async def get_daily_prices(ticker: str, outputsize: str = "compact") -> list[dic
 
 async def get_company_overview(ticker: str) -> dict:
     """Get company fundamentals."""
-    return await _fetch({
+    return await fetch({
         "function": "OVERVIEW",
         "symbol": ticker,
     }, cache_ttl=86400)
@@ -89,7 +89,7 @@ async def get_company_overview(ticker: str) -> dict:
 
 async def get_news_sentiment(ticker: str) -> list[dict]:
     """Get news sentiment from Alpha Vantage."""
-    data = await _fetch({
+    data = await fetch({
         "function": "NEWS_SENTIMENT",
         "tickers": ticker,
         "limit": "10",

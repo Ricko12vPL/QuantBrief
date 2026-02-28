@@ -75,6 +75,7 @@ export default function RatioComparison({ ratios, ticker }: RatioComparisonProps
               color: '#e4e4e7',
               fontSize: '12px',
             }}
+            // Recharts v3 formatter type workaround
             formatter={((_: unknown, __: unknown, entry: { payload: { raw: number } }) => [
               entry.payload.raw.toFixed(2),
               'Value',

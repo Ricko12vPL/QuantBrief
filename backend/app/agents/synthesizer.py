@@ -111,7 +111,7 @@ class SynthesisAgent:
             )
 
             latency = (time.time() - start) * 1000
-            result_text = response.choices[0].message.content
+            result_text = response.choices[0].message.content or ""
             usage = response.usage
 
             log_agent_call(
@@ -148,7 +148,7 @@ class SynthesisAgent:
                 success=False,
             )
             return IntelligenceBrief(
-                executive_summary=f"Brief generation failed: {e}",
+                executive_summary="Analysis could not be completed",
                 signals=signals,
                 filing_analyses=filing_analyses,
                 watchlist_tickers=watchlist_tickers,
