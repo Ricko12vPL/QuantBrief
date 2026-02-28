@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import logging
 from datetime import datetime, timedelta, timezone
@@ -96,6 +97,18 @@ async def search_symbols(query: str) -> list[dict]:
         {"symbol": r["symbol"], "description": r["description"], "type": r.get("type", "")}
         for r in results if r.get("type") == "Common Stock"
     ][:8]
+
+
+async def get_quotes_batch(tickers: list[str]) -> list[dict]:
+    """Get real-time quotes for multiple tickers in parallel."""
+    results = await asyncio.gather(*(get_quote(t) for t in tickers), return_exceptions=True)
+    quotes: list[dict] = []
+    for t, result in zip(tickers, results):
+        if isinstance(result, dict) and "ticker" in result:
+            quotes.append(result)
+        else:
+            quotes.append({"ticker": t, "price": 0, "change": 0, "change_pct": 0})
+    return quotes
 
 
 async def get_candles(ticker: str, resolution: str = "D", days: int = 90) -> list[dict]:

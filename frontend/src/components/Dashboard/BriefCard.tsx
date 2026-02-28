@@ -26,7 +26,7 @@ export default function BriefCard({ brief, onPlayAudio }: BriefCardProps) {
   const date = new Date(brief.generated_at).toLocaleString()
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FF7000]/10">

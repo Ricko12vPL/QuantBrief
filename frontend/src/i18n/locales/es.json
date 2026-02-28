@@ -92,5 +92,22 @@
   "interval_1d": "1D",
   "interval_1w": "1S",
   "interval_1m": "1M",
-  "interval_3m": "3M"
+  "interval_3m": "3M",
+  "hero_headline_prefix": "Inteligencia de Mercado",
+  "hero_headline_gradient": "Impulsada por IA",
+  "hero_subtitle": "Pipeline multi-agente que filtra noticias, analiza documentos SEC con contexto 256K, evalúa el impacto en cartera y genera briefings de audio en 5 idiomas.",
+  "get_started": "Comenzar",
+  "feature_screening": "Filtrado en Tiempo Real",
+  "feature_screening_desc": "Filtrado ultrarrápido de noticias y documentos",
+  "feature_analysis": "Análisis Profundo",
+  "feature_analysis_desc": "Análisis completo de documentos SEC con ventana de contexto 256K",
+  "feature_risk": "Evaluación de Riesgos",
+  "feature_risk_desc": "Razonamiento en cadena sobre el impacto en cartera",
+  "feature_audio": "Briefings de Audio",
+  "feature_audio_desc": "Briefings de voz multilingües en 5 idiomas",
+  "demo_data": "Datos de demostración — API no disponible",
+  "price": "Precio",
+  "change": "Cambio",
+  "ticker": "Símbolo",
+  "no_watchlist": "Añade símbolos a tu lista de seguimiento"
 }

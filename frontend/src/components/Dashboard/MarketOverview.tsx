@@ -66,7 +66,7 @@ export default function MarketOverview({ signals, tickers }: MarketOverviewProps
   const tickerData = tickers.map((ticker) => computeTickerData(ticker, signals))
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <BarChart3 className="h-5 w-5 text-[#FF7000]" />
         {t('market_overview')}

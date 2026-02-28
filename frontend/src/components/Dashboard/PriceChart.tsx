@@ -22,7 +22,7 @@ type IntervalKey = '1D' | '1W' | '1M' | '3M'
 type ChartMode = 'candle' | 'line'
 
 const INTERVAL_CONFIG: Record<IntervalKey, { resolution: string; days: number }> = {
-  '1D': { resolution: '60', days: 1 },
+  '1D': { resolution: '5', days: 1 },
   '1W': { resolution: 'D', days: 7 },
   '1M': { resolution: 'D', days: 30 },
   '3M': { resolution: 'D', days: 90 },
@@ -44,7 +44,34 @@ export default function PriceChart({ ticker }: PriceChartProps) {
   const [mode, setMode] = useState<ChartMode>('candle')
   const [candles, setCandles] = useState<Candle[]>([])
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [priceChange, setPriceChange] = useState({ value: 0, percent: 0, current: 0 })
+
+  function generateMockCandles(days: number): Candle[] {
+    const candles: Candle[] = []
+    const now = Math.floor(Date.now() / 1000)
+    let price = 150 + Math.random() * 50
+    const intervals = Math.min(days * 8, 200)
+    const step = (days * 86400) / intervals
+    for (let i = 0; i < intervals; i++) {
+      const open = price
+      const change = (Math.random() - 0.48) * 3
+      const close = open + change
+      const high = Math.max(open, close) + Math.random() * 2
+      const low = Math.min(open, close) - Math.random() * 2
+      const volume = Math.floor(1000000 + Math.random() * 5000000)
+      candles.push({
+        date: now - (intervals - i) * step,
+        open: parseFloat(open.toFixed(2)),
+        high: parseFloat(high.toFixed(2)),
+        low: parseFloat(low.toFixed(2)),
+        close: parseFloat(close.toFixed(2)),
+        volume,
+      })
+      price = close
+    }
+    return candles
+  }
 
   // Fetch candle data
   useEffect(() => {
@@ -55,25 +82,45 @@ export default function PriceChart({ ticker }: PriceChartProps) {
       .getCandles(ticker, config.resolution, config.days)
       .then((data) => {
         if (cancelled) return
-        setCandles(data.candles || [])
         const c = data.candles || []
-        if (c.length >= 2) {
-          const first = c[0].close
-          const last = c[c.length - 1].close
+        let usable: Candle[]
+        if (c.length > 0) {
+          usable = c
+          setErrorMsg(null)
+        } else {
+          usable = generateMockCandles(config.days)
+          setErrorMsg(data.error || t('demo_data'))
+        }
+        setCandles(usable)
+        if (usable.length >= 2) {
+          const first = usable[0].close
+          const last = usable[usable.length - 1].close
           const change = last - first
           setPriceChange({
             value: change,
             percent: first !== 0 ? (change / first) * 100 : 0,
             current: last,
           })
-        } else if (c.length === 1) {
-          setPriceChange({ value: 0, percent: 0, current: c[0].close })
+        } else if (usable.length === 1) {
+          setPriceChange({ value: 0, percent: 0, current: usable[0].close })
         }
         setLoading(false)
       })
       .catch(() => {
         if (!cancelled) {
-          setCandles([])
+          const mock = generateMockCandles(config.days)
+          setCandles(mock)
+          setErrorMsg(t('demo_data'))
+          if (mock.length >= 2) {
+            const first = mock[0].close
+            const last = mock[mock.length - 1].close
+            const change = last - first
+            setPriceChange({
+              value: change,
+              percent: first !== 0 ? (change / first) * 100 : 0,
+              current: last,
+            })
+          }
           setLoading(false)
         }
       })
@@ -195,7 +242,7 @@ export default function PriceChart({ ticker }: PriceChartProps) {
   const changeColor = priceChange.value >= 0 ? 'text-emerald-400' : 'text-red-400'
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
           <LineChart className="h-5 w-5 text-[#FF7000]" />
@@ -246,6 +293,12 @@ export default function PriceChart({ ticker }: PriceChartProps) {
           ))}
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Chart */}
       {loading ? (

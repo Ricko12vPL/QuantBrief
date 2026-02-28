@@ -92,5 +92,22 @@
   "interval_1d": "1T",
   "interval_1w": "1W",
   "interval_1m": "1M",
-  "interval_3m": "3M"
+  "interval_3m": "3M",
+  "hero_headline_prefix": "KI-gestützte",
+  "hero_headline_gradient": "Marktintelligenz",
+  "hero_subtitle": "Multi-Agenten-Pipeline, die Nachrichten filtert, SEC-Einreichungen mit 256K-Kontext analysiert, Portfolio-Auswirkungen bewertet und Audio-Briefings in 5 Sprachen liefert.",
+  "get_started": "Loslegen",
+  "feature_screening": "Echtzeit-Screening",
+  "feature_screening_desc": "Blitzschnelle Nachrichten- und Dokumentenfilterung",
+  "feature_analysis": "Tiefenanalyse",
+  "feature_analysis_desc": "Vollständige SEC-Analyse mit 256K-Kontextfenster",
+  "feature_risk": "Risikobewertung",
+  "feature_risk_desc": "Kettenbasierte Argumentation über Portfolio-Auswirkungen",
+  "feature_audio": "Audio-Briefings",
+  "feature_audio_desc": "Mehrsprachige Sprachbriefings in 5 Sprachen",
+  "demo_data": "Demo-Daten — API nicht verfügbar",
+  "price": "Preis",
+  "change": "Änderung",
+  "ticker": "Symbol",
+  "no_watchlist": "Fügen Sie Symbole zu Ihrer Watchlist hinzu"
 }

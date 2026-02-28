@@ -81,6 +81,10 @@ export const api = {
       }),
   },
   market: {
+    getQuotes: (tickers: string[]) =>
+      fetchJSON<{ quotes: Array<{ ticker: string; price: number; change: number; change_pct: number }> }>(
+        `/market/quotes?tickers=${tickers.join(',')}`
+      ),
     getCandles: (ticker: string, resolution = 'D', days = 90) =>
       fetchJSON<any>(`/market/${ticker}/candles?resolution=${resolution}&days=${days}`),
     getTechnical: (ticker: string) =>

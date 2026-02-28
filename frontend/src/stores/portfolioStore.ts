@@ -13,7 +13,7 @@ interface PortfolioState {
   loading: boolean
   error: string | null
   fetch: () => Promise<void>
-  add: (ticker: string, shares: number, avgPrice: number, companyName?: string) => Promise<void>
+  add: (ticker: string, shares: number, avgPrice: number, companyName?: string) => Promise<boolean>
   remove: (ticker: string) => Promise<void>
   tickers: () => string[]
 }
@@ -41,8 +41,10 @@ export const usePortfolioStore = create<PortfolioState>((set, get) => ({
     try {
       const data = await api.portfolio.add(ticker, shares, avgPrice, companyName)
       set({ positions: data.positions })
+      return true
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to add position' })
+      return false
     }
   },
 

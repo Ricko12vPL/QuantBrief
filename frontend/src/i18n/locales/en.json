@@ -92,5 +92,22 @@
   "interval_1d": "1D",
   "interval_1w": "1W",
   "interval_1m": "1M",
-  "interval_3m": "3M"
+  "interval_3m": "3M",
+  "hero_headline_prefix": "AI-Powered",
+  "hero_headline_gradient": "Market Intelligence",
+  "hero_subtitle": "Multi-agent pipeline that screens news, analyzes SEC filings with 256K context, reasons about portfolio impact, and delivers audio briefings in 5 languages.",
+  "get_started": "Get Started",
+  "feature_screening": "Real-Time Screening",
+  "feature_screening_desc": "Lightning-fast news and filing filtering across all markets",
+  "feature_analysis": "Deep Filing Analysis",
+  "feature_analysis_desc": "Full SEC filing analysis with 256K context window",
+  "feature_risk": "Risk Assessment",
+  "feature_risk_desc": "Chain-of-thought reasoning about portfolio impact",
+  "feature_audio": "Audio Briefings",
+  "feature_audio_desc": "Multilingual voice briefings in 5 languages",
+  "demo_data": "Demo data — API unavailable",
+  "price": "Price",
+  "change": "Change",
+  "ticker": "Ticker",
+  "no_watchlist": "Add tickers to your watchlist to track prices"
 }

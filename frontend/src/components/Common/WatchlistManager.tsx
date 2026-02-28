@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, X, Eye, Search } from 'lucide-react'
+import { Plus, X, Eye, Search, TrendingUp, TrendingDown } from 'lucide-react'
 import { useWatchlistStore } from '../../stores/watchlistStore'
 import { api } from '../../lib/api'
 
@@ -12,7 +12,7 @@ interface Suggestion {
 
 export default function WatchlistManager() {
   const { t } = useTranslation()
-  const { items, add, remove } = useWatchlistStore()
+  const { items, quotes, add, remove, fetchQuotes } = useWatchlistStore()
   const [input, setInput] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
@@ -55,6 +55,15 @@ export default function WatchlistManager() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Fetch quotes on mount and every 30 seconds
+  useEffect(() => {
+    fetchQuotes()
+    const interval = window.setInterval(() => {
+      fetchQuotes()
+    }, 30_000)
+    return () => window.clearInterval(interval)
+  }, [fetchQuotes])
 
   const selectSuggestion = async (suggestion: Suggestion) => {
     await add(suggestion.symbol, suggestion.description)
@@ -99,12 +108,12 @@ export default function WatchlistManager() {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <Eye className="h-5 w-5 text-[#FF7000]" />
         {t('watchlist')}
       </h3>
-      <div className="relative mb-3" ref={dropdownRef}>
+      <div className="relative mb-4" ref={dropdownRef}>
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -145,26 +154,71 @@ export default function WatchlistManager() {
           </div>
         )}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <div
-            key={item.ticker}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5"
-          >
-            <span className="text-sm font-medium text-white">{item.ticker}</span>
-            {item.company_name && (
-              <span className="text-xs text-zinc-500">{item.company_name}</span>
-            )}
-            <button
-              onClick={() => remove(item.ticker)}
-              aria-label={`${t('remove_ticker')} ${item.ticker}`}
-              className="ml-1 text-zinc-600 transition hover:text-red-400"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+
+      {items.length > 0 ? (
+        <div>
+          {/* Header row */}
+          <div className="flex items-center justify-between border-b border-zinc-700 pb-2 text-xs text-zinc-500">
+            <span className="flex-1">{t('ticker') || 'Ticker'}</span>
+            <div className="flex items-center gap-3 text-right">
+              <span className="w-20 text-right">{t('price') || 'Price'}</span>
+              <span className="w-20 text-right">{t('change') || 'Change'}</span>
+              <span className="w-5" />
+            </div>
           </div>
-        ))}
-      </div>
+
+          {/* Watchlist rows */}
+          {items.map((item) => {
+            const quote = quotes[item.ticker]
+            const positive = quote ? quote.change_pct >= 0 : true
+            return (
+              <div
+                key={item.ticker}
+                className="flex items-center justify-between border-b border-zinc-800/50 py-2 last:border-0"
+              >
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm font-medium text-white">{item.ticker}</span>
+                  {item.company_name && (
+                    <span className="ml-2 truncate text-xs text-zinc-500">{item.company_name}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="w-20 text-right tabular-nums text-zinc-300">
+                    {quote ? `$${quote.price.toFixed(2)}` : '---'}
+                  </span>
+                  <span
+                    className={`flex w-20 items-center justify-end gap-1 tabular-nums ${
+                      positive ? 'text-emerald-400' : 'text-red-400'
+                    }`}
+                  >
+                    {quote ? (
+                      <>
+                        {positive ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3" />
+                        )}
+                        {quote.change_pct >= 0 ? '+' : ''}{quote.change_pct.toFixed(2)}%
+                      </>
+                    ) : (
+                      '---'
+                    )}
+                  </span>
+                  <button
+                    onClick={() => remove(item.ticker)}
+                    aria-label={`${t('remove_ticker')} ${item.ticker}`}
+                    className="text-zinc-600 transition hover:text-red-400"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="text-center text-sm text-zinc-600">{t('no_watchlist')}</p>
+      )}
     </div>
   )
 }

@@ -92,5 +92,22 @@
   "interval_1d": "1D",
   "interval_1w": "1T",
   "interval_1m": "1M",
-  "interval_3m": "3M"
+  "interval_3m": "3M",
+  "hero_headline_prefix": "Inteligencja Rynkowa",
+  "hero_headline_gradient": "Napędzana przez AI",
+  "hero_subtitle": "Wieloagentowy pipeline filtrujący wiadomości, analizujący dokumenty SEC z kontekstem 256K, oceniający wpływ na portfel i generujący briefi audio w 5 językach.",
+  "get_started": "Rozpocznij",
+  "feature_screening": "Screening w Czasie Rzeczywistym",
+  "feature_screening_desc": "Błyskawiczne filtrowanie wiadomości i dokumentów",
+  "feature_analysis": "Głęboka Analiza",
+  "feature_analysis_desc": "Pełna analiza dokumentów SEC z oknem kontekstu 256K",
+  "feature_risk": "Ocena Ryzyka",
+  "feature_risk_desc": "Łańcuchowe rozumowanie o wpływie na portfel",
+  "feature_audio": "Briefi Audio",
+  "feature_audio_desc": "Wielojęzyczne briefi głosowe w 5 językach",
+  "demo_data": "Dane demonstracyjne — API niedostępne",
+  "price": "Cena",
+  "change": "Zmiana",
+  "ticker": "Symbol",
+  "no_watchlist": "Dodaj symbole do listy obserwowanych"
 }

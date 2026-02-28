@@ -24,10 +24,27 @@ class TechnicalAnalysisRequest(BaseModel):
     question: str = ""
 
 
+@router.get("/quotes")
+async def get_batch_quotes(tickers: str = ""):
+    from app.data_sources.finnhub_client import get_quotes_batch
+    ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()][:20]
+    if not ticker_list:
+        return {"quotes": []}
+    quotes = await get_quotes_batch(ticker_list)
+    return {"quotes": quotes}
+
+
 @router.get("/{ticker}/candles")
 async def get_candle_data(ticker: str, resolution: str = "D", days: int = 90):
     candles = await get_candles(ticker.upper(), resolution, days)
-    return {"ticker": ticker.upper(), "resolution": resolution, "candles": candles}
+    error_msg = None
+    if not candles:
+        settings = get_settings()
+        if not settings.finnhub_api_key:
+            error_msg = "Finnhub API key not configured"
+        else:
+            error_msg = f"No candle data for {ticker.upper()} (resolution={resolution})"
+    return {"ticker": ticker.upper(), "resolution": resolution, "candles": candles, "error": error_msg}
 
 
 @router.get("/{ticker}/technical")

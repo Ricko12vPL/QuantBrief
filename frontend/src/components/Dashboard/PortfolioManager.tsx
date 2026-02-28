@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Briefcase, Plus, Trash2, Search } from 'lucide-react'
+import { Briefcase, Plus, Trash2, Search, Loader2 } from 'lucide-react'
 import { usePortfolioStore } from '../../stores/portfolioStore'
 import { api } from '../../lib/api'
 
@@ -11,7 +11,7 @@ interface Suggestion {
 
 export default function PortfolioManager() {
   const { t } = useTranslation()
-  const { positions, add, remove, fetch: fetchPortfolio } = usePortfolioStore()
+  const { positions, error, add, remove, fetch: fetchPortfolio } = usePortfolioStore()
 
   const [ticker, setTicker] = useState('')
   const [shares, setShares] = useState('')
@@ -20,6 +20,7 @@ export default function PortfolioManager() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [companyName, setCompanyName] = useState('')
+  const [adding, setAdding] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -69,15 +70,19 @@ export default function PortfolioManager() {
   }
 
   const handleAdd = async () => {
-    const t = ticker.trim().toUpperCase()
+    const tickerVal = ticker.trim().toUpperCase()
     const s = parseFloat(shares)
     const p = parseFloat(avgPrice)
-    if (!t || isNaN(s) || s <= 0 || isNaN(p) || p <= 0) return
-    await add(t, s, p, companyName)
-    setTicker('')
-    setShares('')
-    setAvgPrice('')
-    setCompanyName('')
+    if (!tickerVal || isNaN(s) || s <= 0 || isNaN(p) || p <= 0) return
+    setAdding(true)
+    const success = await add(tickerVal, s, p, companyName.trim())
+    setAdding(false)
+    if (success) {
+      setTicker('')
+      setShares('')
+      setAvgPrice('')
+      setCompanyName('')
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -99,11 +104,17 @@ export default function PortfolioManager() {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <Briefcase className="h-5 w-5 text-[#FF7000]" />
         {t('portfolio')}
       </h3>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+          {error}
+        </div>
+      )}
 
       <div className="mb-4 space-y-2">
         <div className="relative" ref={dropdownRef}>
@@ -157,9 +168,10 @@ export default function PortfolioManager() {
           />
           <button
             onClick={handleAdd}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#FF7000] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#FF7000]/80"
+            disabled={adding}
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#FF7000] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#FF7000]/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="h-4 w-4" />
+            {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             {t('add')}
           </button>
         </div>

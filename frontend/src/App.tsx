@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Zap, Loader2, LayoutDashboard, Briefcase } from 'lucide-react'
+import { Zap, Loader2 } from 'lucide-react'
 import './i18n'
 import './App.css'
 
@@ -9,6 +9,7 @@ import { useWatchlistStore } from './stores/watchlistStore'
 import { usePortfolioStore } from './stores/portfolioStore'
 import { api } from './lib/api'
 
+import Hero from './components/Landing/Hero'
 import BriefCard from './components/Dashboard/BriefCard'
 import EventTimeline from './components/Dashboard/EventTimeline'
 import MarketOverview from './components/Dashboard/MarketOverview'
@@ -40,7 +41,7 @@ function App() {
   const portfolio = usePortfolioStore()
   const [language, setLanguage] = useState('en')
   const [ratioData, setRatioData] = useState<Record<string, Record<string, number>>>({})
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'portfolio'>('portfolio')
+  const [showApp, setShowApp] = useState(false)
   const audioRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -81,11 +82,15 @@ function App() {
     audioRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  if (!showApp) {
+    return <Hero onGetStarted={() => setShowApp(true)} />
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF7000]">
               <Zap className="h-5 w-5 text-white" />
@@ -118,143 +123,113 @@ function App() {
         </div>
       </header>
 
-      {/* Main */}
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        {/* Tab Navigation */}
-        <div className="mb-6 flex gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-1">
-          <button
-            onClick={() => setActiveTab('portfolio')}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
-              activeTab === 'portfolio'
-                ? 'bg-[#FF7000] text-white'
-                : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
-            }`}
-          >
-            <Briefcase className="h-4 w-4" />
-            {t('portfolio')} & {t('watchlist')}
-          </button>
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
-              activeTab === 'dashboard'
-                ? 'bg-[#FF7000] text-white'
-                : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
-            }`}
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            {t('dashboard')}
-          </button>
-        </div>
+      {/* Main layout with sidebar */}
+      <div className="mx-auto flex max-w-[1400px] gap-6 px-4 py-6">
+        <main className="min-w-0 flex-1">
+          {/* Pipeline Status */}
+          {loading && (
+            <div className="mb-6">
+              <AgentStatusBar currentStage={pipelineStage} />
+            </div>
+          )}
 
-        {/* Pipeline Status */}
-        {loading && (
-          <div className="mb-6">
-            <AgentStatusBar currentStage={pipelineStage} />
-          </div>
-        )}
+          {/* Error */}
+          {error && (
+            <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+              {error}
+            </div>
+          )}
 
-        {/* Error */}
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
-            {error}
-          </div>
-        )}
+          {!brief && !loading && (
+            <div className="flex flex-col items-center justify-center py-32 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FF7000]/10">
+                <Zap className="h-8 w-8 text-[#FF7000]" />
+              </div>
+              <p className="text-lg text-zinc-500">{t('no_brief')}</p>
+            </div>
+          )}
 
-        {/* Tab: Portfolio & Watchlist */}
-        {activeTab === 'portfolio' && (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {brief && (
+            <div className="space-y-6">
+              {/* Row 1: Brief Card + Sentiment Gauge */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                <div className="lg:col-span-3">
+                  <BriefCard brief={brief} onPlayAudio={scrollToAudio} />
+                </div>
+                <div className="flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+                  <SentimentGauge
+                    value={sentimentToScore(brief.overall_sentiment)}
+                    label={t('overall_sentiment')}
+                    size={140}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Events + Market Overview */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <EventTimeline events={brief.material_events} />
+                <MarketOverview signals={brief.signals} tickers={brief.watchlist_tickers} />
+              </div>
+
+              {/* Row 3: Price Charts + Technical Analysis */}
+              {brief.watchlist_tickers && brief.watchlist_tickers.length > 0 && (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {brief.watchlist_tickers.map((ticker: string) => (
+                    <div key={ticker} className="space-y-4">
+                      <PriceChart ticker={ticker} />
+                      <TechnicalAnalysis ticker={ticker} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Row 4: Portfolio Impact */}
+              <PortfolioImpact
+                actionItems={brief.action_items}
+                riskAlerts={brief.risk_alerts}
+                tickers={brief.watchlist_tickers}
+                signals={brief.signals}
+                overallSentiment={brief.overall_sentiment}
+                confidence={brief.confidence_score}
+              />
+
+              {/* Row 5: Reasoning Chain */}
+              <ReasoningChain steps={brief.reasoning_chain} />
+
+              {/* Row 6: Filing Analysis + Ratio Comparisons */}
+              <FilingViewer analyses={brief.filing_analyses} />
+              {Object.keys(ratioData).length > 0 && (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {Object.entries(ratioData).map(([ticker, ratios]) => (
+                    <RatioComparison key={ticker} ticker={ticker} ratios={ratios} />
+                  ))}
+                </div>
+              )}
+
+              {/* Row 7: Audio Player + Transcript */}
+              <div ref={audioRef}>
+                <AudioPlayer audioUrl={brief.audio_url} script={brief.audio_script} />
+              </div>
+              {brief.audio_script && (
+                <TranscriptView
+                  transcript={brief.audio_script}
+                  title={t('transcript')}
+                />
+              )}
+
+              {/* Row 8: Earnings Call Upload (Voxtral) */}
+              <EarningsCallUpload />
+            </div>
+          )}
+        </main>
+
+        <aside className="hidden w-[320px] shrink-0 lg:block">
+          <div className="sticky top-[73px] max-h-[calc(100vh-73px)] space-y-4 overflow-y-auto pb-6">
             <PortfolioManager />
             <WatchlistManager />
           </div>
-        )}
-
-        {/* Tab: Dashboard */}
-        {activeTab === 'dashboard' && (
-          <>
-            {!brief && !loading && (
-              <div className="flex flex-col items-center justify-center py-32 text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FF7000]/10">
-                  <Zap className="h-8 w-8 text-[#FF7000]" />
-                </div>
-                <p className="text-lg text-zinc-500">{t('no_brief')}</p>
-              </div>
-            )}
-
-            {brief && (
-              <div className="space-y-6">
-                {/* Row 1: Brief Card + Sentiment Gauge */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-                  <div className="lg:col-span-3">
-                    <BriefCard brief={brief} onPlayAudio={scrollToAudio} />
-                  </div>
-                  <div className="flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
-                    <SentimentGauge
-                      value={sentimentToScore(brief.overall_sentiment)}
-                      label={t('overall_sentiment')}
-                      size={140}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: Events + Market Overview */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <EventTimeline events={brief.material_events} />
-                  <MarketOverview signals={brief.signals} tickers={brief.watchlist_tickers} />
-                </div>
-
-                {/* Row 3: Price Charts + Technical Analysis */}
-                {brief.watchlist_tickers && brief.watchlist_tickers.length > 0 && (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {brief.watchlist_tickers.map((ticker: string) => (
-                      <div key={ticker} className="space-y-4">
-                        <PriceChart ticker={ticker} />
-                        <TechnicalAnalysis ticker={ticker} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Row 4: Portfolio Impact */}
-                <PortfolioImpact
-                  actionItems={brief.action_items}
-                  riskAlerts={brief.risk_alerts}
-                  tickers={brief.watchlist_tickers}
-                  signals={brief.signals}
-                  overallSentiment={brief.overall_sentiment}
-                  confidence={brief.confidence_score}
-                />
-
-                {/* Row 5: Reasoning Chain */}
-                <ReasoningChain steps={brief.reasoning_chain} />
-
-                {/* Row 6: Filing Analysis + Ratio Comparisons */}
-                <FilingViewer analyses={brief.filing_analyses} />
-                {Object.keys(ratioData).length > 0 && (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {Object.entries(ratioData).map(([ticker, ratios]) => (
-                      <RatioComparison key={ticker} ticker={ticker} ratios={ratios} />
-                    ))}
-                  </div>
-                )}
-
-                {/* Row 7: Audio Player + Transcript */}
-                <div ref={audioRef}>
-                  <AudioPlayer audioUrl={brief.audio_url} script={brief.audio_script} />
-                </div>
-                {brief.audio_script && (
-                  <TranscriptView
-                    transcript={brief.audio_script}
-                    title={t('transcript')}
-                  />
-                )}
-
-                {/* Row 8: Earnings Call Upload (Voxtral) */}
-                <EarningsCallUpload />
-              </div>
-            )}
-          </>
-        )}
-      </main>
+        </aside>
+      </div>
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 py-4 text-center text-xs text-zinc-600">
