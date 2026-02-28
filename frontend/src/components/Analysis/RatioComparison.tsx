@@ -40,7 +40,7 @@ export default function RatioComparison({ ratios, ticker }: RatioComparisonProps
   const data = normalizeRatios(ratios)
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <Target className="h-5 w-5 text-[#FF7000]" />
         {ticker} {t('ratio_comparison')}
@@ -88,7 +88,7 @@ export default function RatioComparison({ ratios, ticker }: RatioComparisonProps
         {data.map((item) => (
           <div key={item.name} className="rounded-lg bg-zinc-800/50 p-2">
             <div className="text-xs text-zinc-500">{item.name}</div>
-            <div className="text-sm font-medium text-white">{item.raw.toFixed(2)}</div>
+            <div className="text-sm font-medium tabular-nums text-white">{item.raw.toFixed(2)}</div>
           </div>
         ))}
       </div>

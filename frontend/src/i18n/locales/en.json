@@ -109,5 +109,7 @@
   "price": "Price",
   "change": "Change",
   "ticker": "Ticker",
-  "no_watchlist": "Add tickers to your watchlist to track prices"
+  "no_watchlist": "Add tickers to your watchlist to track prices",
+  "validation_shares_price": "Enter shares and average price",
+  "demo_data_portfolio": "Demo mode — positions stored locally"
 }

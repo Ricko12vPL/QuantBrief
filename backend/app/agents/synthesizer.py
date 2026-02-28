@@ -94,15 +94,24 @@ class SynthesisAgent:
 
         start = time.time()
         try:
+            lang_names = {"en": "English", "fr": "French", "de": "German", "pl": "Polish", "es": "Spanish"}
+            lang_name = lang_names.get(language, language)
+            lang_enforce = (
+                f"CRITICAL: ALL text output MUST be in {lang_name} ({language}). "
+                f"executive_summary, audio_script — every sentence in {lang_name}. "
+                f"Do NOT mix languages. Keep only ticker symbols and numbers in original format.\n\n"
+            )
             response = await self.client.chat.complete_async(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": self._prompt},
+                    {"role": "system", "content": lang_enforce + self._prompt},
                     {
                         "role": "user",
                         "content": (
-                            f"Generate intelligence brief in '{language}':\n"
-                            f"{json.dumps(input_data, default=str)}"
+                            f"LANGUAGE: {lang_name} ({language}) — write ALL text in {lang_name}.\n\n"
+                            f"Generate intelligence brief:\n"
+                            f"{json.dumps(input_data, default=str)}\n\n"
+                            f"REMINDER: Every sentence must be in {lang_name}."
                         ),
                     },
                 ],

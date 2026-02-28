@@ -25,7 +25,7 @@ export default function ReasoningChain({ steps }: ReasoningChainProps) {
   if (!steps.length) return null
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <Brain className="h-5 w-5 text-[#FF7000]" />
         {t('reasoning_chain')}
@@ -39,9 +39,9 @@ export default function ReasoningChain({ steps }: ReasoningChainProps) {
               <div className="mb-2 flex items-center gap-2">
                 <Icon className="h-4 w-4" />
                 <span className="text-sm font-semibold">{t(config.labelKey)}</span>
-                <span className="text-xs opacity-50">{t('reasoning_step')} {i + 1}/{steps.length}</span>
+                <span className="text-xs tabular-nums opacity-50">{t('reasoning_step')} {i + 1}/{steps.length}</span>
               </div>
-              <p className="text-sm leading-relaxed opacity-90 whitespace-pre-wrap">{step.content}</p>
+              <p className="text-justify text-sm leading-relaxed opacity-90 whitespace-pre-wrap">{step.content}</p>
             </div>
           )
         })}

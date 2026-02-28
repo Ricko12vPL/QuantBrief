@@ -56,14 +56,13 @@ export default function WatchlistManager() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Fetch quotes on mount and every 30 seconds
+  // Fetch quotes when items load and every 30 seconds
   useEffect(() => {
+    if (items.length === 0) return
     fetchQuotes()
-    const interval = window.setInterval(() => {
-      fetchQuotes()
-    }, 30_000)
+    const interval = window.setInterval(fetchQuotes, 30_000)
     return () => window.clearInterval(interval)
-  }, [fetchQuotes])
+  }, [items.length])
 
   const selectSuggestion = async (suggestion: Suggestion) => {
     await add(suggestion.symbol, suggestion.description)

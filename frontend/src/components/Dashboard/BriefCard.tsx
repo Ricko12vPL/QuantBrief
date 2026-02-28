@@ -55,7 +55,7 @@ export default function BriefCard({ brief, onPlayAudio }: BriefCardProps) {
           )}
         </div>
       </div>
-      <p className="leading-relaxed text-zinc-300">{brief.executive_summary}</p>
+      <p className="text-justify leading-relaxed text-zinc-300">{brief.executive_summary}</p>
       <div className="mt-4 flex items-center gap-2">
         <span className="text-sm text-zinc-500">{t('confidence')}:</span>
         <div className="h-2 w-32 overflow-hidden rounded-full bg-zinc-800">
@@ -64,7 +64,7 @@ export default function BriefCard({ brief, onPlayAudio }: BriefCardProps) {
             style={{ width: `${brief.confidence_score * 100}%` }}
           />
         </div>
-        <span className="text-sm font-medium text-zinc-400">
+        <span className="text-sm font-medium tabular-nums text-zinc-400">
           {Math.round(brief.confidence_score * 100)}%
         </span>
       </div>

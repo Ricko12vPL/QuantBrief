@@ -116,7 +116,7 @@ export default function PortfolioImpact({
   const OverallIcon = overallStyle.icon
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <Grid3X3 className="h-5 w-5 text-[#FF7000]" />
         {t('portfolio_impact')}
@@ -129,7 +129,7 @@ export default function PortfolioImpact({
           <span className={`text-sm font-semibold ${overallStyle.text}`}>
             {t(`sentiment_${overallSentiment}`)}
           </span>
-          <span className="ml-2 text-xs text-zinc-500">
+          <span className="ml-2 text-xs tabular-nums text-zinc-500">
             {t('confidence')}: {Math.round(confidence * 100)}%
           </span>
         </div>
@@ -151,7 +151,7 @@ export default function PortfolioImpact({
                 <span className={`mt-1 text-xs font-medium ${style.text}`}>
                   {t(`sentiment_${sentiment}`)}
                 </span>
-                <span className="mt-0.5 text-xs text-zinc-500">
+                <span className="mt-0.5 text-xs tabular-nums text-zinc-500">
                   {confidencePct}%
                 </span>
               </div>
@@ -177,7 +177,7 @@ export default function PortfolioImpact({
                   <span className="text-sm font-medium">{item.action}</span>
                 </div>
                 {item.rationale && (
-                  <p className="mt-1 text-xs opacity-70">{item.rationale}</p>
+                  <p className="mt-1 text-justify text-xs opacity-70">{item.rationale}</p>
                 )}
               </div>
             ))}
@@ -209,7 +209,7 @@ export default function PortfolioImpact({
                     {alert.risk_type}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-zinc-400">{alert.description}</p>
+                <p className="mt-1 text-justify text-sm text-zinc-400">{alert.description}</p>
               </div>
             ))}
           </div>

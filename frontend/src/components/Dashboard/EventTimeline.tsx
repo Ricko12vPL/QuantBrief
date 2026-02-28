@@ -32,7 +32,7 @@ export default function EventTimeline({ events }: EventTimelineProps) {
   if (!events.length) return null
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <AlertTriangle className="h-5 w-5 text-[#FF7000]" />
         {t('material_events')}
@@ -55,8 +55,8 @@ export default function EventTimeline({ events }: EventTimelineProps) {
                   <span className="text-xs text-zinc-500">{event.event_type.replace(/_/g, ' ')}</span>
                   <Icon className={`h-3.5 w-3.5 ${event.sentiment === 'bullish' ? 'text-emerald-400' : event.sentiment === 'bearish' ? 'text-red-400' : 'text-yellow-400'}`} />
                 </div>
-                <p className="mt-1 text-sm font-medium text-zinc-200">{event.headline}</p>
-                <p className="mt-0.5 text-sm text-zinc-500">{event.impact_assessment}</p>
+                <p className="mt-1 text-justify text-sm font-medium text-zinc-200">{event.headline}</p>
+                <p className="mt-0.5 text-justify text-sm text-zinc-500">{event.impact_assessment}</p>
                 <div className="mt-1 flex items-center gap-1">
                   <div className="h-1.5 w-16 overflow-hidden rounded-full bg-zinc-800">
                     <div
@@ -64,7 +64,7 @@ export default function EventTimeline({ events }: EventTimelineProps) {
                       style={{ width: `${event.confidence * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-zinc-600">{Math.round(event.confidence * 100)}%</span>
+                  <span className="text-xs tabular-nums text-zinc-600">{Math.round(event.confidence * 100)}%</span>
                 </div>
               </div>
             </div>

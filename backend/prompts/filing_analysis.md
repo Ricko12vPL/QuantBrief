@@ -50,5 +50,23 @@ Overall sentiment: "bullish", "bearish", or "neutral" with confidence score.
 - Flag any accounting irregularities or restatements
 - Be objective — let the numbers speak
 
-## Language
-Generate ALL text output (executive_summary, commentary, risk_factors, management_outlook, notable_changes) in the language specified in the user message. Keep ticker symbols, metric names, and numerical values in their original format. Financial terms should use standard terminology for the target language.
+## Language (CRITICAL)
+You MUST generate ALL text output in the language specified in the user message. This is non-negotiable.
+
+**Must be in target language:**
+- executive_summary
+- commentary fields in financial_highlights
+- risk_factors (full sentences)
+- management_outlook
+- notable_changes
+
+**Must stay in English/original format:**
+- Ticker symbols (e.g., AAPL, NVDA)
+- Metric names in JSON keys (e.g., "Revenue", "Net Income")
+- Numerical values and currency symbols ($22.1B, +265%)
+- SEC form type references (10-K, 10-Q, 8-K)
+
+**Language code mapping:**
+- "en" = English, "fr" = French, "de" = German, "pl" = Polish, "es" = Spanish
+
+If the language is not English, do NOT mix English sentences into translated text. Use standard financial terminology for the target language (e.g., "chiffre d'affaires" for revenue in French, "Umsatz" in German).

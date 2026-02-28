@@ -11,7 +11,7 @@ interface Suggestion {
 
 export default function PortfolioManager() {
   const { t } = useTranslation()
-  const { positions, error, add, remove, fetch: fetchPortfolio } = usePortfolioStore()
+  const { positions, error, isLocal, add, remove, fetch: fetchPortfolio } = usePortfolioStore()
 
   const [ticker, setTicker] = useState('')
   const [shares, setShares] = useState('')
@@ -21,12 +21,13 @@ export default function PortfolioManager() {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [companyName, setCompanyName] = useState('')
   const [adding, setAdding] = useState(false)
+  const [validationMsg, setValidationMsg] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     fetchPortfolio()
-  }, [fetchPortfolio])
+  }, [])
 
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 2) {
@@ -73,7 +74,11 @@ export default function PortfolioManager() {
     const tickerVal = ticker.trim().toUpperCase()
     const s = parseFloat(shares)
     const p = parseFloat(avgPrice)
-    if (!tickerVal || isNaN(s) || s <= 0 || isNaN(p) || p <= 0) return
+    if (!tickerVal || isNaN(s) || s <= 0 || isNaN(p) || p <= 0) {
+      setValidationMsg(t('validation_shares_price'))
+      return
+    }
+    setValidationMsg('')
     setAdding(true)
     const success = await add(tickerVal, s, p, companyName.trim())
     setAdding(false)
@@ -110,9 +115,21 @@ export default function PortfolioManager() {
         {t('portfolio')}
       </h3>
 
+      {isLocal && (
+        <div className="mb-4 rounded-lg border border-blue-500/20 bg-blue-500/15 px-3 py-2 text-sm text-blue-400">
+          {t('demo_data_portfolio')}
+        </div>
+      )}
+
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/15 px-3 py-2 text-sm text-red-400">
           {error}
+        </div>
+      )}
+
+      {validationMsg && (
+        <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/15 px-3 py-2 text-sm text-amber-400">
+          {validationMsg}
         </div>
       )}
 
@@ -123,7 +140,7 @@ export default function PortfolioManager() {
             <input
               type="text"
               value={ticker}
-              onChange={(e) => setTicker(e.target.value)}
+              onChange={(e) => { setTicker(e.target.value); setValidationMsg('') }}
               onKeyDown={handleKeyDown}
               onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
               placeholder={t('search_ticker')}
@@ -151,7 +168,7 @@ export default function PortfolioManager() {
           <input
             type="number"
             value={shares}
-            onChange={(e) => setShares(e.target.value)}
+            onChange={(e) => { setShares(e.target.value); setValidationMsg('') }}
             placeholder={t('shares')}
             min="0"
             step="any"
@@ -160,7 +177,7 @@ export default function PortfolioManager() {
           <input
             type="number"
             value={avgPrice}
-            onChange={(e) => setAvgPrice(e.target.value)}
+            onChange={(e) => { setAvgPrice(e.target.value); setValidationMsg('') }}
             placeholder={t('avg_price')}
             min="0"
             step="any"

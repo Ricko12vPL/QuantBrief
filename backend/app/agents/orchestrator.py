@@ -88,14 +88,18 @@ class PipelineOrchestrator:
 
         # ── Stage 2: Sequential filing analysis + reasoning ──
         await self._emit("analyzing", 0)
+
+        # Distribute filings evenly across tickers (round-robin, max 2 per ticker)
+        distributed = self._distribute_filings(filings, tickers, max_per_ticker=2, total_max=6)
+
         filing_analyses = []
-        for i, filing in enumerate(filings[:5]):
+        for i, filing in enumerate(distributed):
             analysis = await self._safe(
                 self.filing_analyst.analyze_filing(filing, language=language), None
             )
             if analysis:
                 filing_analyses.append(analysis)
-            await self._emit("analyzing", int((i + 1) / max(len(filings), 1) * 100))
+            await self._emit("analyzing", int((i + 1) / max(len(distributed), 1) * 100))
 
         await self._emit("reasoning", 0)
         reasoning_result = await self._safe(
@@ -104,6 +108,7 @@ class PipelineOrchestrator:
                 filing_analyses=filing_analyses,
                 watchlist_tickers=tickers,
                 macro_snapshot=macro,
+                language=language,
             ),
             {
                 "reasoning_steps": [],
@@ -157,6 +162,39 @@ class PipelineOrchestrator:
         })
         logger.info("Pipeline completed in %.1fs", total_ms / 1000)
         return brief
+
+    @staticmethod
+    def _distribute_filings(filings, tickers, max_per_ticker=2, total_max=6):
+        """Round-robin: ensure every ticker gets at least 1 filing before any gets 2."""
+        by_ticker: dict[str, list] = {t: [] for t in tickers}
+        for f in filings:
+            tk = f.ticker.upper() if hasattr(f, "ticker") else ""
+            if tk in by_ticker:
+                by_ticker[tk].append(f)
+
+        # Also include filings for tickers not in the original list
+        for f in filings:
+            tk = f.ticker.upper() if hasattr(f, "ticker") else ""
+            if tk not in by_ticker:
+                by_ticker[tk] = [f]
+
+        result = []
+        # Round 1: 1 filing per ticker (most recent = first in list)
+        for tk in tickers:
+            if by_ticker.get(tk):
+                result.append(by_ticker[tk][0])
+                if len(result) >= total_max:
+                    return result
+
+        # Round 2: second filing per ticker if slots remain
+        for tk in tickers:
+            bucket = by_ticker.get(tk, [])
+            if len(bucket) > 1:
+                result.append(bucket[1])
+                if len(result) >= total_max:
+                    return result
+
+        return result
 
     @staticmethod
     async def _safe(coro, fallback):

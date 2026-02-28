@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Activity, Brain, Loader2, PenLine } from 'lucide-react'
+import { Activity, BarChart3, Brain, Loader2, PenLine, TrendingUp } from 'lucide-react'
 import { api } from '../../lib/api'
 
 interface TechnicalAnalysisProps {
@@ -13,6 +13,20 @@ interface TechnicalData {
   rsi_signal: string
   macd_signal: string
   macd_histogram: number
+  macd_line?: number
+  macd_signal_line?: number
+  bb_upper?: number
+  bb_middle?: number
+  bb_lower?: number
+  bb_position?: string
+  sma_20?: number
+  sma_50?: number
+  sma_200?: number
+  price?: number
+  price_vs_sma200?: string
+  volume_signal?: string
+  volume_latest?: number
+  volume_avg_20?: number
 }
 
 interface AIAnalysis {
@@ -34,6 +48,34 @@ function getRSIColor(rsi: number): string {
 
 function getRSIBgWidth(rsi: number): string {
   return `${Math.min(Math.max(rsi, 0), 100)}%`
+}
+
+function getBBPositionLabel(pos?: string): string {
+  const labels: Record<string, string> = {
+    above_upper: 'Above upper band',
+    near_upper: 'Near upper band',
+    middle: 'Middle',
+    near_lower: 'Near lower band',
+    below_lower: 'Below lower band',
+  }
+  return labels[pos ?? 'middle'] ?? 'Middle'
+}
+
+function getBBPositionColor(pos?: string): string {
+  if (pos === 'above_upper' || pos === 'near_upper') return 'text-red-400'
+  if (pos === 'below_lower' || pos === 'near_lower') return 'text-emerald-400'
+  return 'text-zinc-300'
+}
+
+function getVolumeColor(signal?: string): string {
+  if (signal === 'high') return 'text-[#FF7000]'
+  if (signal === 'low') return 'text-zinc-500'
+  return 'text-zinc-300'
+}
+
+function getSMAColor(price: number, sma: number): string {
+  if (!sma) return 'text-zinc-500'
+  return price > sma ? 'text-emerald-400' : 'text-red-400'
 }
 
 export default function TechnicalAnalysis({ ticker }: TechnicalAnalysisProps) {
@@ -123,7 +165,7 @@ export default function TechnicalAnalysis({ ticker }: TechnicalAnalysisProps) {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-zinc-500">Histogram:</span>
-            <span className={`text-sm font-medium ${
+            <span className={`tabular-nums text-sm font-medium ${
               data.macd_histogram > 0 ? 'text-emerald-400' : data.macd_histogram < 0 ? 'text-red-400' : 'text-zinc-400'
             }`}>
               {data.macd_histogram > 0 ? '+' : ''}{data.macd_histogram.toFixed(4)}
@@ -131,6 +173,89 @@ export default function TechnicalAnalysis({ ticker }: TechnicalAnalysisProps) {
           </div>
         </div>
       </div>
+
+      {(data.bb_upper != null || data.sma_20 != null) && (
+        <div className="mb-4 grid grid-cols-2 gap-4">
+          <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-3">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1 text-xs text-zinc-500">
+                <BarChart3 className="h-3 w-3" />
+                Bollinger Bands
+              </span>
+              <span className={`text-xs font-medium ${getBBPositionColor(data.bb_position)}`}>
+                {getBBPositionLabel(data.bb_position)}
+              </span>
+            </div>
+            <div className="mt-1 space-y-0.5 text-xs tabular-nums">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Upper</span>
+                <span className="text-zinc-300">${data.bb_upper?.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Middle</span>
+                <span className="text-zinc-300">${data.bb_middle?.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Lower</span>
+                <span className="text-zinc-300">${data.bb_lower?.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-3">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1 text-xs text-zinc-500">
+                <TrendingUp className="h-3 w-3" />
+                Moving Averages
+              </span>
+              {data.price_vs_sma200 && data.price_vs_sma200 !== 'neutral' && (
+                <span className={`text-xs font-medium ${data.price_vs_sma200 === 'above' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {data.price_vs_sma200 === 'above' ? 'Above' : 'Below'} SMA200
+                </span>
+              )}
+            </div>
+            <div className="mt-1 space-y-0.5 text-xs tabular-nums">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">SMA 20</span>
+                <span className={getSMAColor(data.price ?? 0, data.sma_20 ?? 0)}>
+                  ${data.sma_20?.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">SMA 50</span>
+                <span className={getSMAColor(data.price ?? 0, data.sma_50 ?? 0)}>
+                  {data.sma_50 ? `$${data.sma_50.toFixed(2)}` : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">SMA 200</span>
+                <span className={getSMAColor(data.price ?? 0, data.sma_200 ?? 0)}>
+                  {data.sma_200 ? `$${data.sma_200.toFixed(2)}` : '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {data.volume_signal && (
+        <div className="mb-4">
+          <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-500">Volume</span>
+              <span className={`text-xs font-medium capitalize ${getVolumeColor(data.volume_signal)}`}>
+                {data.volume_signal}
+              </span>
+            </div>
+            {data.volume_latest != null && data.volume_avg_20 != null && (
+              <div className="mt-1 flex items-center gap-3 text-xs tabular-nums text-zinc-400">
+                <span>Latest: {(data.volume_latest / 1e6).toFixed(1)}M</span>
+                <span>Avg(20): {(data.volume_avg_20 / 1e6).toFixed(1)}M</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mb-4 flex gap-2">
         <button
@@ -180,7 +305,7 @@ export default function TechnicalAnalysis({ ticker }: TechnicalAnalysisProps) {
               </div>
             )}
             {aiAnalysis.recommendation_rationale && (
-              <p className="text-zinc-400">{aiAnalysis.recommendation_rationale}</p>
+              <p className="text-justify text-zinc-400">{aiAnalysis.recommendation_rationale}</p>
             )}
             {aiAnalysis.risk_level && (
               <div>

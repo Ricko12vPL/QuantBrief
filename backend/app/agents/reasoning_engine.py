@@ -31,12 +31,23 @@ class ReasoningAgent:
         self._fallback_model = settings.model_analysis
         self._prompt = PROMPT_PATH.read_text() if PROMPT_PATH.exists() else ""
 
+    @staticmethod
+    def _lang_prefix(language: str) -> str:
+        lang_names = {"en": "English", "fr": "French", "de": "German", "pl": "Polish", "es": "Spanish"}
+        lang_name = lang_names.get(language, language)
+        return (
+            f"IMPORTANT: Write ALL text content (reasoning_steps content, headlines, "
+            f"impact_assessment, action rationale, risk description) in {lang_name} ({language}). "
+            f"Keep ticker symbols, metric names, and numbers in original format.\n\n"
+        )
+
     async def assess_impact(
         self,
         signals: list[MarketSignal],
         filing_analyses: list[FilingAnalysis],
         watchlist_tickers: list[str],
         macro_snapshot: dict | None = None,
+        language: str = "en",
     ) -> dict:
         """Perform chain-of-thought reasoning on all available data."""
         input_data = {
@@ -67,16 +78,17 @@ class ReasoningAgent:
             "macro_snapshot": macro_snapshot or {},
         }
 
+        lang_prefix = self._lang_prefix(language)
         model = self.model
         start = time.time()
         try:
             response = await self.client.chat.complete_async(
                 model=model,
                 messages=[
-                    {"role": "system", "content": self._prompt},
+                    {"role": "system", "content": lang_prefix + self._prompt},
                     {
                         "role": "user",
-                        "content": f"Assess portfolio impact:\n{json.dumps(input_data)}",
+                        "content": f"{lang_prefix}Assess portfolio impact:\n{json.dumps(input_data)}",
                     },
                 ],
                 response_format={"type": "json_object"},
@@ -90,7 +102,7 @@ class ReasoningAgent:
             )
             model = self._fallback_model
             cot_prompt = (
-                self._prompt
+                lang_prefix + self._prompt
                 + "\n\nIMPORTANT: Think step-by-step through each stage of the reasoning framework."
             )
             try:
@@ -100,7 +112,7 @@ class ReasoningAgent:
                         {"role": "system", "content": cot_prompt},
                         {
                             "role": "user",
-                            "content": f"Assess portfolio impact:\n{json.dumps(input_data)}",
+                            "content": f"{lang_prefix}Assess portfolio impact:\n{json.dumps(input_data)}",
                         },
                     ],
                     response_format={"type": "json_object"},

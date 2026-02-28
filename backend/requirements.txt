@@ -11,3 +11,5 @@ python-dotenv==1.0.1
 python-multipart==0.0.20
 aiosqlite==0.20.0
 redis==5.2.1
+yfinance>=0.2.40
+pandas>=2.0.0

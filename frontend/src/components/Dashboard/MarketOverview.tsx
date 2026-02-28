@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react'
+import { BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { ResponsiveContainer, LineChart, Line } from 'recharts'
 
 interface Signal {
@@ -48,11 +48,15 @@ function computeTickerData(ticker: string, signals: Signal[]) {
   const dailyChangePct = avgSentimentScore * 1.2 + (avgRelevance - 0.5) * 0.8
   const dailyChangeAbs = price * (dailyChangePct / 100)
 
+  const sentimentLabel =
+    avgSentimentScore > 0.2 ? 'bullish' : avgSentimentScore < -0.2 ? 'bearish' : 'neutral'
+
   return {
     ticker,
     signalCount: tickerSignals.length,
     avgSentimentScore,
     avgRelevance,
+    sentimentLabel,
     price: Number(price.toFixed(2)),
     dailyChangePct: Number(dailyChangePct.toFixed(2)),
     dailyChangeAbs: Number(dailyChangeAbs.toFixed(2)),
@@ -71,43 +75,52 @@ export default function MarketOverview({ signals, tickers }: MarketOverviewProps
         <BarChart3 className="h-5 w-5 text-[#FF7000]" />
         {t('market_overview')}
       </h3>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {tickerData.map((data) => {
           const isPositive = data.dailyChangePct >= 0
           const changeColor = isPositive ? 'text-emerald-400' : 'text-red-400'
           const sparklineColor = isPositive ? '#34d399' : '#f87171'
 
+          const sentimentColor =
+            data.sentimentLabel === 'bullish'
+              ? 'text-emerald-400'
+              : data.sentimentLabel === 'bearish'
+                ? 'text-red-400'
+                : 'text-zinc-400'
+
+          const SentimentIcon =
+            data.sentimentLabel === 'bullish'
+              ? TrendingUp
+              : data.sentimentLabel === 'bearish'
+                ? TrendingDown
+                : Minus
+
           return (
             <div
               key={data.ticker}
-              className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4 transition hover:border-zinc-700"
+              className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-5 transition hover:border-zinc-700"
             >
+              {/* Row 1: Ticker + Sentiment */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-white">{data.ticker}</span>
-                  {data.avgSentimentScore > 0.2 ? (
-                    <TrendingUp className="h-4 w-4 text-emerald-400" />
-                  ) : data.avgSentimentScore < -0.2 ? (
-                    <TrendingDown className="h-4 w-4 text-red-400" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full bg-yellow-400/20" />
-                  )}
-                </div>
-                <span className="text-lg font-semibold text-white">
+                <span className="text-base font-bold text-white">{data.ticker}</span>
+                <span className={`flex items-center gap-1.5 text-xs font-medium ${sentimentColor}`}>
+                  <SentimentIcon className="h-3.5 w-3.5" />
+                  {t(`sentiment_${data.sentimentLabel}`)}
+                </span>
+              </div>
+
+              {/* Row 2: Price + Change */}
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tabular-nums text-white">
                   ${data.price.toFixed(2)}
                 </span>
-              </div>
-
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-xs text-zinc-500">
-                  {data.signalCount} {data.signalCount === 1 ? t('market_signal') : t('market_signals')}
-                </span>
-                <span className={`text-sm font-medium ${changeColor}`}>
-                  {isPositive ? '+' : ''}{data.dailyChangeAbs.toFixed(2)} ({isPositive ? '+' : ''}{data.dailyChangePct.toFixed(2)}%)
+                <span className={`text-sm font-medium tabular-nums ${changeColor}`}>
+                  {isPositive ? '+' : ''}{data.dailyChangePct.toFixed(2)}%
                 </span>
               </div>
 
-              <div className="mt-2 h-10">
+              {/* Sparkline */}
+              <div className="mt-3 h-12">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.sparklineData}>
                     <Line
@@ -121,17 +134,9 @@ export default function MarketOverview({ signals, tickers }: MarketOverviewProps
                 </ResponsiveContainer>
               </div>
 
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-700">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    data.avgSentimentScore > 0.2
-                      ? 'bg-emerald-400'
-                      : data.avgSentimentScore < -0.2
-                        ? 'bg-red-400'
-                        : 'bg-yellow-400'
-                  }`}
-                  style={{ width: `${Math.max(10, data.avgRelevance * 100)}%` }}
-                />
+              {/* Footer */}
+              <div className="mt-3 border-t border-zinc-800/50 pt-3 text-xs tabular-nums text-zinc-500">
+                {data.signalCount} {data.signalCount === 1 ? t('market_signal') : t('market_signals')} · relevance {Math.round(data.avgRelevance * 100)}%
               </div>
             </div>
           )

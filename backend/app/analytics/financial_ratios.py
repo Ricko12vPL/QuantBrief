@@ -1,6 +1,6 @@
 import logging
 
-from app.data_sources.alpha_vantage import get_company_overview
+from app.data_sources.yfinance_client import get_company_overview
 
 logger = logging.getLogger(__name__)
 

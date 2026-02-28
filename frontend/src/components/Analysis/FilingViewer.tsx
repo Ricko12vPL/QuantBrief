@@ -45,7 +45,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
   if (!analyses.length) return null
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur">
+    <div className="glass-card p-6">
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
         <FileText className="h-5 w-5 text-[#FF7000]" />
         {t('filing_analysis')}
@@ -64,7 +64,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
             </div>
 
             <Section title={t('executive_summary')} defaultOpen>
-              <p className="text-sm leading-relaxed text-zinc-300">{analysis.executive_summary}</p>
+              <p className="text-justify text-sm leading-relaxed text-zinc-300">{analysis.executive_summary}</p>
             </Section>
 
             {analysis.financial_highlights.length > 0 && (
@@ -85,7 +85,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
                           <td className="py-1.5 pr-4 text-zinc-300">{h.metric}</td>
                           <td className="py-1.5 pr-4 font-medium text-white">{h.current_value}</td>
                           <td className="py-1.5 pr-4 text-zinc-500">{h.previous_value || '—'}</td>
-                          <td className={`py-1.5 ${h.change_pct != null ? (h.change_pct > 0 ? 'text-emerald-400' : h.change_pct < 0 ? 'text-red-400' : 'text-zinc-400') : 'text-zinc-600'}`}>
+                          <td className={`py-1.5 tabular-nums ${h.change_pct != null ? (h.change_pct > 0 ? 'text-emerald-400' : h.change_pct < 0 ? 'text-red-400' : 'text-zinc-400') : 'text-zinc-600'}`}>
                             {h.change_pct != null ? `${h.change_pct > 0 ? '+' : ''}${h.change_pct.toFixed(1)}%` : '—'}
                           </td>
                         </tr>
@@ -124,7 +124,7 @@ export default function FilingViewer({ analyses }: FilingViewerProps) {
 
             {analysis.management_outlook && (
               <Section title={t('filing_management_outlook')}>
-                <p className="text-sm text-zinc-400">{analysis.management_outlook}</p>
+                <p className="text-justify text-sm text-zinc-400">{analysis.management_outlook}</p>
               </Section>
             )}
           </div>
