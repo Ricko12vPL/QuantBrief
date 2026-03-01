@@ -9,8 +9,16 @@ feedparser==6.0.11
 wandb>=0.19.0
 python-dotenv==1.0.1
 python-multipart==0.0.20
-aiosqlite==0.20.0
 redis==5.2.1
 yfinance>=0.2.40
 pandas>=2.0.0
 apscheduler>=3.10.4
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.1
+bcrypt==4.2.1
+PyJWT==2.9.0
+slowapi==0.1.9
+pytest==8.3.4
+pytest-asyncio==0.24.0
+aiosqlite==0.20.0

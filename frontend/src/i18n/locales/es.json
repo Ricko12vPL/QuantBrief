@@ -140,5 +140,20 @@
   "schedule_next": "Proximo",
   "schedule_paused": "Pausado",
   "schedule_unnamed": "Programa Sin Nombre",
-  "schedule_max_reached": "Limite alcanzado (10 programas)"
+  "schedule_max_reached": "Limite alcanzado (10 programas)",
+  "login": "Iniciar Sesion",
+  "register": "Registrarse",
+  "email": "Correo electronico",
+  "password": "Contrasena",
+  "confirm_password": "Confirmar contrasena",
+  "display_name": "Nombre para mostrar",
+  "logging_in": "Iniciando sesion...",
+  "registering": "Registrando...",
+  "no_account": "No tienes cuenta?",
+  "have_account": "Ya tienes cuenta?",
+  "logout": "Cerrar Sesion",
+  "session_expired": "Sesion expirada. Inicie sesion nuevamente.",
+  "passwords_dont_match": "Las contrasenas no coinciden",
+  "validation_email_required": "El correo electronico es obligatorio",
+  "validation_password_min": "La contrasena debe tener al menos 8 caracteres"
 }

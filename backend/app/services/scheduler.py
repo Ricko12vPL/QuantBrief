@@ -1,17 +1,27 @@
 import asyncio
 import logging
 import uuid
+from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
+from enum import Enum
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.schedule import Schedule, ScheduleFrequency, TickerSource
+from app.utils.validation import DEFAULT_TICKERS
 
 logger = logging.getLogger(__name__)
 
-MAX_SCHEDULES = 10
+MAX_SCHEDULES_PER_USER = 10
+
+
+def _job_next_run(job: object) -> datetime | None:
+    return getattr(job, "next_run_time", None) if job else None
 
 
 class SchedulerService:
@@ -19,7 +29,6 @@ class SchedulerService:
         self._scheduler = AsyncIOScheduler()
         self._schedules: dict[str, Schedule] = {}
         self._lock = asyncio.Lock()
-        self._briefs: list | None = None
 
     def start(self) -> None:
         self._scheduler.start()
@@ -29,17 +38,74 @@ class SchedulerService:
         self._scheduler.shutdown(wait=False)
         logger.info("Scheduler shut down")
 
-    def list_schedules(self) -> list[Schedule]:
-        return list(self._schedules.values())
+    def is_pipeline_running(self) -> bool:
+        return self._lock.locked()
 
-    def get_schedule(self, schedule_id: str) -> Schedule | None:
-        return self._schedules.get(schedule_id)
+    @asynccontextmanager
+    async def pipeline_lock(self) -> AsyncGenerator[None, None]:
+        async with self._lock:
+            yield
 
-    def create_schedule(
+    async def load_schedules_from_db(self) -> None:
+        from app.db.engine import get_session_factory
+        from app.db.models import ScheduleRow
+
+        factory = get_session_factory()
+        async with factory() as session:
+            result = await session.execute(select(ScheduleRow))
+            rows = result.scalars().all()
+
+            for row in rows:
+                schedule = Schedule(
+                    id=row.id,
+                    user_id=row.user_id,
+                    name=row.name,
+                    ticker_source=TickerSource(row.ticker_source),
+                    tickers=row.tickers or [],
+                    frequency=ScheduleFrequency(row.frequency),
+                    hour=row.hour,
+                    minute=row.minute,
+                    day_of_week=row.day_of_week,
+                    language=row.language,
+                    generate_audio=row.generate_audio,
+                    paused=row.paused,
+                    created_at=row.created_at,
+                    last_run_at=row.last_run_at,
+                    next_run_at=row.next_run_at,
+                    last_brief_id=row.last_brief_id,
+                )
+                self._schedules[row.id] = schedule
+
+                if not row.paused:
+                    trigger = self._build_trigger(schedule)
+                    self._scheduler.add_job(
+                        self._execute_schedule,
+                        trigger=trigger,
+                        id=row.id,
+                        args=[row.id, row.user_id],
+                        replace_existing=True,
+                    )
+
+            logger.info("Loaded %d schedules from DB", len(rows))
+
+    def list_schedules_for_user(self, user_id: str) -> list[Schedule]:
+        return [s for s in self._schedules.values() if s.user_id == user_id]
+
+    def _get_user_schedule(self, schedule_id: str, user_id: str) -> Schedule:
+        schedule = self._schedules.get(schedule_id)
+        if schedule is None:
+            raise KeyError(f"Schedule {schedule_id} not found")
+        if schedule.user_id != user_id:
+            raise KeyError(f"Schedule {schedule_id} not found")
+        return schedule
+
+    async def create_schedule(
         self,
-        name: str,
-        ticker_source: TickerSource,
-        frequency: ScheduleFrequency,
+        user_id: str,
+        db: AsyncSession,
+        name: str = "",
+        ticker_source: TickerSource = TickerSource.WATCHLIST,
+        frequency: ScheduleFrequency = ScheduleFrequency.DAILY,
         tickers: list[str] | None = None,
         hour: int = 9,
         minute: int = 0,
@@ -47,7 +113,10 @@ class SchedulerService:
         language: str = "en",
         generate_audio: bool = True,
     ) -> Schedule:
-        if len(self._schedules) >= MAX_SCHEDULES:
+        from app.db.models import ScheduleRow
+
+        user_count = sum(1 for s in self._schedules.values() if s.user_id == user_id)
+        if user_count >= MAX_SCHEDULES_PER_USER:
             raise ValueError("Maximum number of schedules reached")
 
         schedule_id = uuid.uuid4().hex[:12]
@@ -55,6 +124,7 @@ class SchedulerService:
 
         schedule = Schedule(
             id=schedule_id,
+            user_id=user_id,
             name=name or "Unnamed Schedule",
             ticker_source=ticker_source,
             tickers=tickers or [],
@@ -73,70 +143,115 @@ class SchedulerService:
             self._execute_schedule,
             trigger=trigger,
             id=schedule_id,
-            args=[schedule_id],
+            args=[schedule_id, user_id],
             replace_existing=True,
         )
 
-        job = self._scheduler.get_job(schedule_id)
-        if job and job.next_run_time:
-            schedule = schedule.model_copy(
-                update={"next_run_at": job.next_run_time}
-            )
+        next_run = _job_next_run(self._scheduler.get_job(schedule_id))
+        if next_run:
+            schedule = schedule.model_copy(update={"next_run_at": next_run})
 
         self._schedules[schedule_id] = schedule
+
+        row = ScheduleRow(
+            id=schedule_id,
+            user_id=user_id,
+            name=schedule.name,
+            ticker_source=ticker_source.value,
+            tickers=tickers or [],
+            frequency=frequency.value,
+            hour=hour,
+            minute=minute,
+            day_of_week=day_of_week,
+            language=language,
+            generate_audio=generate_audio,
+            paused=False,
+            created_at=now,
+            next_run_at=schedule.next_run_at,
+        )
+        db.add(row)
+
         return schedule
 
-    def update_schedule(self, schedule_id: str, **fields: object) -> Schedule:
-        schedule = self._schedules.get(schedule_id)
-        if schedule is None:
-            raise KeyError(f"Schedule {schedule_id} not found")
+    async def update_schedule(
+        self, schedule_id: str, user_id: str, db: AsyncSession, **fields: object
+    ) -> Schedule:
+        from app.db.models import ScheduleRow
 
+        schedule = self._get_user_schedule(schedule_id, user_id)
         schedule = schedule.model_copy(update=fields)
         self._schedules[schedule_id] = schedule
 
         if not schedule.paused:
             trigger = self._build_trigger(schedule)
             self._scheduler.reschedule_job(schedule_id, trigger=trigger)
-            job = self._scheduler.get_job(schedule_id)
-            if job and job.next_run_time:
-                schedule = schedule.model_copy(
-                    update={"next_run_at": job.next_run_time}
-                )
+            next_run = _job_next_run(self._scheduler.get_job(schedule_id))
+            if next_run:
+                schedule = schedule.model_copy(update={"next_run_at": next_run})
                 self._schedules[schedule_id] = schedule
+
+        result = await db.execute(select(ScheduleRow).where(ScheduleRow.id == schedule_id))
+        row = result.scalar_one_or_none()
+        if row:
+            for key, val in fields.items():
+                if isinstance(val, Enum):
+                    val = val.value
+                setattr(row, key, val)
+            row.next_run_at = schedule.next_run_at
 
         return schedule
 
-    def delete_schedule(self, schedule_id: str) -> None:
-        if schedule_id not in self._schedules:
-            raise KeyError(f"Schedule {schedule_id} not found")
+    async def delete_schedule(self, schedule_id: str, user_id: str, db: AsyncSession) -> None:
+        from app.db.models import ScheduleRow
+
+        self._get_user_schedule(schedule_id, user_id)
+
         try:
             self._scheduler.remove_job(schedule_id)
         except Exception:
             pass
         del self._schedules[schedule_id]
 
-    def pause_schedule(self, schedule_id: str) -> Schedule:
-        schedule = self._schedules.get(schedule_id)
-        if schedule is None:
-            raise KeyError(f"Schedule {schedule_id} not found")
+        result = await db.execute(select(ScheduleRow).where(ScheduleRow.id == schedule_id))
+        row = result.scalar_one_or_none()
+        if row:
+            await db.delete(row)
+
+    async def pause_schedule(
+        self, schedule_id: str, user_id: str, db: AsyncSession
+    ) -> Schedule:
+        from app.db.models import ScheduleRow
+
+        schedule = self._get_user_schedule(schedule_id, user_id)
         self._scheduler.pause_job(schedule_id)
-        schedule = schedule.model_copy(
-            update={"paused": True, "next_run_at": None}
-        )
+        schedule = schedule.model_copy(update={"paused": True, "next_run_at": None})
         self._schedules[schedule_id] = schedule
+
+        result = await db.execute(select(ScheduleRow).where(ScheduleRow.id == schedule_id))
+        row = result.scalar_one_or_none()
+        if row:
+            row.paused = True
+            row.next_run_at = None
+
         return schedule
 
-    def resume_schedule(self, schedule_id: str) -> Schedule:
-        schedule = self._schedules.get(schedule_id)
-        if schedule is None:
-            raise KeyError(f"Schedule {schedule_id} not found")
+    async def resume_schedule(
+        self, schedule_id: str, user_id: str, db: AsyncSession
+    ) -> Schedule:
+        from app.db.models import ScheduleRow
+
+        schedule = self._get_user_schedule(schedule_id, user_id)
         self._scheduler.resume_job(schedule_id)
-        job = self._scheduler.get_job(schedule_id)
-        next_run = job.next_run_time if job else None
-        schedule = schedule.model_copy(
-            update={"paused": False, "next_run_at": next_run}
-        )
+        next_run = _job_next_run(self._scheduler.get_job(schedule_id))
+        schedule = schedule.model_copy(update={"paused": False, "next_run_at": next_run})
         self._schedules[schedule_id] = schedule
+
+        result = await db.execute(select(ScheduleRow).where(ScheduleRow.id == schedule_id))
+        row = result.scalar_one_or_none()
+        if row:
+            row.paused = False
+            row.next_run_at = next_run
+
         return schedule
 
     def _build_trigger(self, schedule: Schedule) -> IntervalTrigger | CronTrigger:
@@ -151,22 +266,39 @@ class SchedulerService:
             timezone="UTC",
         )
 
-    def _resolve_tickers(self, schedule: Schedule) -> list[str]:
-        from app.api.routes_portfolio import _portfolio
-        from app.api.routes_watchlist import _watchlist
+    async def _resolve_tickers_from_db(self, schedule: Schedule, user_id: str) -> list[str]:
+        from app.db.engine import get_session_factory
+        from app.db.models import PortfolioPositionRow, WatchlistItemRow
 
         if schedule.ticker_source == TickerSource.CUSTOM:
             return schedule.tickers
 
+        factory = get_session_factory()
         tickers: set[str] = set()
-        if schedule.ticker_source in (TickerSource.PORTFOLIO, TickerSource.ALL):
-            tickers.update(p["ticker"] for p in _portfolio)
-        if schedule.ticker_source in (TickerSource.WATCHLIST, TickerSource.ALL):
-            tickers.update(item.ticker for item in _watchlist.items)
 
-        return list(tickers) if tickers else ["NVDA", "AAPL", "MSFT"]
+        async with factory() as session:
+            if schedule.ticker_source in (TickerSource.PORTFOLIO, TickerSource.ALL):
+                result = await session.execute(
+                    select(PortfolioPositionRow.ticker).where(
+                        PortfolioPositionRow.user_id == user_id
+                    )
+                )
+                tickers.update(r[0] for r in result.all())
 
-    async def _execute_schedule(self, schedule_id: str) -> None:
+            if schedule.ticker_source in (TickerSource.WATCHLIST, TickerSource.ALL):
+                result = await session.execute(
+                    select(WatchlistItemRow.ticker).where(
+                        WatchlistItemRow.user_id == user_id
+                    )
+                )
+                tickers.update(r[0] for r in result.all())
+
+        return list(tickers) if tickers else list(DEFAULT_TICKERS)
+
+    async def _execute_schedule(self, schedule_id: str, user_id: str) -> None:
+        from app.db.engine import get_session_factory
+        from app.db.models import BriefRow, ScheduleRow
+
         schedule = self._schedules.get(schedule_id)
         if schedule is None:
             return
@@ -177,7 +309,7 @@ class SchedulerService:
 
         async with self._lock:
             try:
-                tickers = self._resolve_tickers(schedule)
+                tickers = await self._resolve_tickers_from_db(schedule, user_id)
                 logger.info(
                     "Scheduled run %s (%s) with tickers %s",
                     schedule.name,
@@ -196,14 +328,35 @@ class SchedulerService:
                     generate_audio=schedule.generate_audio,
                 )
 
-                if self._briefs is not None:
-                    self._briefs.append(brief)
-                    if len(self._briefs) > 100:
-                        self._briefs[:] = self._briefs[-100:]
-
                 now = datetime.now(timezone.utc)
-                job = self._scheduler.get_job(schedule_id)
-                next_run = job.next_run_time if job else None
+                factory = get_session_factory()
+                async with factory() as session:
+                    brief_row = BriefRow(
+                        id=brief.id,
+                        user_id=user_id,
+                        executive_summary=brief.executive_summary,
+                        data=brief.model_dump(mode="json"),
+                        language=brief.language,
+                        watchlist_tickers=brief.watchlist_tickers,
+                        overall_sentiment=brief.overall_sentiment,
+                        confidence_score=brief.confidence_score,
+                        audio_url=brief.audio_url,
+                        generated_at=brief.generated_at,
+                    )
+                    session.add(brief_row)
+
+                    result = await session.execute(
+                        select(ScheduleRow).where(ScheduleRow.id == schedule_id)
+                    )
+                    sched_row = result.scalar_one_or_none()
+                    if sched_row:
+                        sched_row.last_run_at = now
+                        sched_row.last_brief_id = brief.id
+                        sched_row.next_run_at = _job_next_run(self._scheduler.get_job(schedule_id))
+
+                    await session.commit()
+
+                next_run = _job_next_run(self._scheduler.get_job(schedule_id))
 
                 schedule = schedule.model_copy(
                     update={
@@ -226,3 +379,13 @@ def get_scheduler_service() -> SchedulerService:
     if _service is None:
         _service = SchedulerService()
     return _service
+
+
+def reset_scheduler_service() -> None:
+    global _service
+    if _service is not None:
+        try:
+            _service.shutdown()
+        except Exception:
+            pass
+    _service = None

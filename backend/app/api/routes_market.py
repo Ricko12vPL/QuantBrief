@@ -1,27 +1,41 @@
 import json
 import logging
-import re
 import time
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from mistralai import Mistral
+
+from app.auth.dependencies import get_current_user
+from app.auth.usage import log_usage
+from app.db.engine import get_db
+from app.db.models import UserRow
 
 from app.config import get_settings
 from app.data_sources.yfinance_client import get_candles, get_news, get_quotes_batch
 from app.analytics.technical_signals import get_technical_summary
 from app.analytics.financial_ratios import compute_ratios
 from app.utils.cache import get_cache
+from app.utils.validation import TICKER_RE
 from app.utils.wandb_logger import log_agent_call
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
-
 TECHNICAL_PROMPT_PATH = Path(__file__).parent.parent.parent / "prompts" / "technical_analysis.md"
+
+_mistral_client: Mistral | None = None
+
+
+def _get_mistral_client() -> Mistral:
+    global _mistral_client
+    if _mistral_client is None:
+        settings = get_settings()
+        _mistral_client = Mistral(api_key=settings.mistral_api_key)
+    return _mistral_client
 
 
 class TechnicalAnalysisRequest(BaseModel):
@@ -53,7 +67,12 @@ async def get_technical(ticker: str):
 
 
 @router.post("/{ticker}/analyze-technical")
-async def ai_technical_analysis(ticker: str, body: TechnicalAnalysisRequest):
+async def ai_technical_analysis(
+    ticker: str,
+    body: TechnicalAnalysisRequest,
+    user: UserRow = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     settings = get_settings()
     summary = await get_technical_summary(ticker.upper())
 
@@ -79,7 +98,7 @@ async def ai_technical_analysis(ticker: str, body: TechnicalAnalysisRequest):
 
     start = time.time()
     try:
-        client = Mistral(api_key=settings.mistral_api_key)
+        client = _get_mistral_client()
         response = await client.chat.complete_async(
             model=settings.model_analysis,
             messages=[
@@ -100,10 +119,11 @@ async def ai_technical_analysis(ticker: str, body: TechnicalAnalysisRequest):
             latency_ms=latency,
         )
         parsed = json.loads(result_text)
+        await log_usage(db, user.id, "technical_analyze", {"ticker": ticker.upper()})
         return {"ticker": ticker.upper(), "indicators": summary, "ai_analysis": parsed}
     except Exception as e:
         logger.error("AI technical analysis failed: %s", e)
-        return {"ticker": ticker.upper(), "indicators": summary, "ai_analysis": {"error": str(e)}}
+        return {"ticker": ticker.upper(), "indicators": summary, "ai_analysis": {"error": "Analysis failed"}}
 
 
 def _enrich_article(article: dict, ai: dict | None = None) -> dict:
@@ -148,7 +168,7 @@ async def get_ticker_news(ticker: str):
 
     start = time.time()
     try:
-        client = Mistral(api_key=settings.mistral_api_key)
+        client = _get_mistral_client()
         response = await client.chat.complete_async(
             model=settings.model_screening,
             messages=[

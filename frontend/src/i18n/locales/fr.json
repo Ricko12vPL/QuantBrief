@@ -140,5 +140,20 @@
   "schedule_next": "Prochain",
   "schedule_paused": "En Pause",
   "schedule_unnamed": "Programme Sans Nom",
-  "schedule_max_reached": "Limite atteinte (10 programmes)"
+  "schedule_max_reached": "Limite atteinte (10 programmes)",
+  "login": "Se Connecter",
+  "register": "S'inscrire",
+  "email": "E-mail",
+  "password": "Mot de passe",
+  "confirm_password": "Confirmer le mot de passe",
+  "display_name": "Nom d'affichage",
+  "logging_in": "Connexion...",
+  "registering": "Inscription...",
+  "no_account": "Pas encore de compte ?",
+  "have_account": "Vous avez deja un compte ?",
+  "logout": "Se Deconnecter",
+  "session_expired": "Session expiree. Veuillez vous reconnecter.",
+  "passwords_dont_match": "Les mots de passe ne correspondent pas",
+  "validation_email_required": "L'e-mail est requis",
+  "validation_password_min": "Le mot de passe doit comporter au moins 8 caracteres"
 }

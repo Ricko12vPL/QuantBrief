@@ -6,7 +6,9 @@ let shouldReconnect = false
 
 export function connectPipelineWS(onProgress: ProgressCallback): () => void {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const url = `${protocol}//${window.location.host}/api/ws/pipeline`
+  const token = localStorage.getItem('qb_token') || ''
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : ''
+  const url = `${protocol}//${window.location.host}/api/ws/pipeline${tokenParam}`
 
   shouldReconnect = true
 

@@ -140,5 +140,20 @@
   "schedule_next": "Nastepny",
   "schedule_paused": "Wstrzymany",
   "schedule_unnamed": "Plan Bez Nazwy",
-  "schedule_max_reached": "Osiagnieto limit (10 planow)"
+  "schedule_max_reached": "Osiagnieto limit (10 planow)",
+  "login": "Zaloguj sie",
+  "register": "Zarejestruj sie",
+  "email": "E-mail",
+  "password": "Haslo",
+  "confirm_password": "Potwierdz haslo",
+  "display_name": "Nazwa wyswietlana",
+  "logging_in": "Logowanie...",
+  "registering": "Rejestracja...",
+  "no_account": "Nie masz konta?",
+  "have_account": "Masz juz konto?",
+  "logout": "Wyloguj sie",
+  "session_expired": "Sesja wygasla. Zaloguj sie ponownie.",
+  "passwords_dont_match": "Hasla nie sa identyczne",
+  "validation_email_required": "E-mail jest wymagany",
+  "validation_password_min": "Haslo musi miec co najmniej 8 znakow"
 }

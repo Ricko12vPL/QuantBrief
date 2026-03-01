@@ -1,14 +1,15 @@
-import re
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dependencies import get_current_user
+from app.db.engine import get_db
+from app.db.models import UserRow
 from app.models.schedule import ScheduleFrequency, TickerSource
 from app.services.scheduler import get_scheduler_service
+from app.utils.validation import TICKER_RE
 
 router = APIRouter()
-
-_TICKER_RE = re.compile(r"^[A-Z0-9.]{1,10}$")
 
 
 class CreateScheduleRequest(BaseModel):
@@ -30,7 +31,7 @@ class CreateScheduleRequest(BaseModel):
         validated = []
         for t in v:
             upper = t.strip().upper()
-            if not _TICKER_RE.match(upper):
+            if not TICKER_RE.match(upper):
                 raise ValueError(f"Invalid ticker '{t}'")
             validated.append(upper)
         return validated
@@ -49,18 +50,27 @@ class UpdateScheduleRequest(BaseModel):
 
 
 @router.get("")
-async def list_schedules() -> dict:
+async def list_schedules(
+    user: UserRow = Depends(get_current_user),
+) -> dict:
     svc = get_scheduler_service()
+    schedules = svc.list_schedules_for_user(user.id)
     return {
-        "schedules": [s.model_dump(mode="json") for s in svc.list_schedules()]
+        "schedules": [s.model_dump(mode="json") for s in schedules]
     }
 
 
 @router.post("")
-async def create_schedule(body: CreateScheduleRequest) -> dict:
+async def create_schedule(
+    body: CreateScheduleRequest,
+    user: UserRow = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
     svc = get_scheduler_service()
     try:
-        schedule = svc.create_schedule(
+        schedule = await svc.create_schedule(
+            user_id=user.id,
+            db=db,
             name=body.name,
             ticker_source=body.ticker_source,
             frequency=body.frequency,
@@ -77,43 +87,60 @@ async def create_schedule(body: CreateScheduleRequest) -> dict:
 
 
 @router.patch("/{schedule_id}")
-async def update_schedule(schedule_id: str, body: UpdateScheduleRequest) -> dict:
+async def update_schedule(
+    schedule_id: str,
+    body: UpdateScheduleRequest,
+    user: UserRow = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
     svc = get_scheduler_service()
     fields = body.model_dump(exclude_none=True)
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")
     try:
-        schedule = svc.update_schedule(schedule_id, **fields)
+        schedule = await svc.update_schedule(schedule_id, user.id, db, **fields)
     except KeyError:
         raise HTTPException(status_code=404, detail="Schedule not found")
     return {"schedule": schedule.model_dump(mode="json")}
 
 
 @router.delete("/{schedule_id}")
-async def delete_schedule(schedule_id: str) -> dict:
+async def delete_schedule(
+    schedule_id: str,
+    user: UserRow = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
     svc = get_scheduler_service()
     try:
-        svc.delete_schedule(schedule_id)
+        await svc.delete_schedule(schedule_id, user.id, db)
     except KeyError:
         raise HTTPException(status_code=404, detail="Schedule not found")
     return {"deleted": True}
 
 
 @router.post("/{schedule_id}/pause")
-async def pause_schedule(schedule_id: str) -> dict:
+async def pause_schedule(
+    schedule_id: str,
+    user: UserRow = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
     svc = get_scheduler_service()
     try:
-        schedule = svc.pause_schedule(schedule_id)
+        schedule = await svc.pause_schedule(schedule_id, user.id, db)
     except KeyError:
         raise HTTPException(status_code=404, detail="Schedule not found")
     return {"schedule": schedule.model_dump(mode="json")}
 
 
 @router.post("/{schedule_id}/resume")
-async def resume_schedule(schedule_id: str) -> dict:
+async def resume_schedule(
+    schedule_id: str,
+    user: UserRow = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
     svc = get_scheduler_service()
     try:
-        schedule = svc.resume_schedule(schedule_id)
+        schedule = await svc.resume_schedule(schedule_id, user.id, db)
     except KeyError:
         raise HTTPException(status_code=404, detail="Schedule not found")
     return {"schedule": schedule.model_dump(mode="json")}

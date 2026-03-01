@@ -62,7 +62,7 @@ interface ReasoningStep {
   content: string
 }
 
-interface Brief {
+export interface Brief {
   id: string
   executive_summary: string
   material_events: MaterialEvent[]
@@ -85,6 +85,7 @@ interface BriefState {
   loading: boolean
   error: string | null
   pipelineStage: string
+  pipelineProgress: number
   generate: (tickers?: string[], language?: string) => Promise<void>
   fetchLatest: () => Promise<void>
   setPipelineStage: (stage: string) => void
@@ -95,17 +96,18 @@ export const useBriefStore = create<BriefState>((set) => ({
   loading: false,
   error: null,
   pipelineStage: '',
+  pipelineProgress: 0,
 
   generate: async (tickers, language) => {
-    set({ loading: true, error: null, pipelineStage: 'screening' })
-    const disconnectWS = connectPipelineWS((stage, _pct) => {
-      set({ pipelineStage: stage })
+    set({ loading: true, error: null, pipelineStage: 'screening', pipelineProgress: 0 })
+    const disconnectWS = connectPipelineWS((stage, pct) => {
+      set({ pipelineStage: stage, pipelineProgress: pct })
     })
     try {
       const data = await api.brief.generate(tickers, language)
-      set({ brief: data.brief, loading: false, pipelineStage: 'done' })
-    } catch (e: any) {
-      set({ error: e.message, loading: false, pipelineStage: '' })
+      set({ brief: data.brief, loading: false, pipelineStage: 'done', pipelineProgress: 100 })
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Unknown error', loading: false, pipelineStage: '', pipelineProgress: 0 })
     } finally {
       disconnectWS()
     }
@@ -117,8 +119,8 @@ export const useBriefStore = create<BriefState>((set) => ({
       if (data.brief) {
         set({ brief: data.brief })
       }
-    } catch (e: any) {
-      set({ error: e.message })
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Unknown error' })
     }
   },
 

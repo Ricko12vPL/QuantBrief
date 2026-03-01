@@ -24,6 +24,21 @@ class Settings(BaseSettings):
     wandb_api_key: str = ""
     wandb_project: str = "quantbrief"
 
+    # Database
+    database_url: str = "postgresql+asyncpg://quantbrief:quantbrief@localhost:5432/quantbrief"
+
+    # JWT
+    jwt_secret_key: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_expire_minutes: int = 15
+    jwt_refresh_expire_days: int = 7
+
+    # CORS
+    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+
+    # Database pool
+    db_pool_size: int = 5
+
     # App
     app_name: str = "QuantBrief"
     debug: bool = False

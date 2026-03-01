@@ -142,5 +142,20 @@
   "schedule_next": "Next",
   "schedule_paused": "Paused",
   "schedule_unnamed": "Unnamed Schedule",
-  "schedule_max_reached": "Max schedules reached (10)"
+  "schedule_max_reached": "Max schedules reached (10)",
+  "login": "Log In",
+  "register": "Register",
+  "email": "Email",
+  "password": "Password",
+  "confirm_password": "Confirm Password",
+  "display_name": "Display Name",
+  "logging_in": "Logging in...",
+  "registering": "Registering...",
+  "no_account": "Don't have an account?",
+  "have_account": "Already have an account?",
+  "logout": "Log Out",
+  "session_expired": "Session expired. Please log in again.",
+  "passwords_dont_match": "Passwords do not match",
+  "validation_email_required": "Email is required",
+  "validation_password_min": "Password must be at least 8 characters"
 }

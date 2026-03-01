@@ -19,6 +19,7 @@ class TickerSource(str, Enum):
 
 class Schedule(BaseModel):
     id: str
+    user_id: str
     name: str
     ticker_source: TickerSource
     tickers: list[str] = []
