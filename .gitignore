@@ -35,3 +35,6 @@ backend/static/audio/*.mp3
 
 # W&B
 wandb/
+
+# Analysis docs
+QuantBrief_Analiza_MVP_Production_Readiness.md
