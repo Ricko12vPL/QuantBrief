@@ -27,7 +27,7 @@ export default function PortfolioManager() {
 
   useEffect(() => {
     fetchPortfolio()
-  }, [])
+  }, [fetchPortfolio])
 
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 2) {

@@ -42,7 +42,7 @@ export default function ScheduleManager() {
       setTick((t) => t + 1)
     }, 15_000)
     return () => window.clearInterval(interval)
-  }, [])
+  }, [fetch])
 
   // Auto-refresh dashboard when a schedule produces a new brief
   useEffect(() => {

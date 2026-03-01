@@ -132,7 +132,7 @@ export default function PriceChart({ ticker }: PriceChartProps) {
         }
       })
     return () => { cancelled = true }
-  }, [ticker, interval])
+  }, [ticker, interval, t])
 
   // Create/update chart
   useEffect(() => {

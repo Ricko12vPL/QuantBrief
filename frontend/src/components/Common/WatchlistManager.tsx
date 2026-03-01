@@ -62,7 +62,7 @@ export default function WatchlistManager() {
     fetchQuotes()
     const interval = window.setInterval(fetchQuotes, 30_000)
     return () => window.clearInterval(interval)
-  }, [items.length])
+  }, [items.length, fetchQuotes])
 
   const selectSuggestion = async (suggestion: Suggestion) => {
     await add(suggestion.symbol, suggestion.description)
