@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Play, Pause, Download, Volume2 } from 'lucide-react'
+import { resolveStaticUrl } from '../../lib/api'
 
 interface AudioPlayerProps {
   audioUrl: string
   script?: string
 }
 
-export default function AudioPlayer({ audioUrl, script }: AudioPlayerProps) {
+export default function AudioPlayer({ audioUrl: rawAudioUrl, script }: AudioPlayerProps) {
+  const audioUrl = resolveStaticUrl(rawAudioUrl)
   const { t } = useTranslation()
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)

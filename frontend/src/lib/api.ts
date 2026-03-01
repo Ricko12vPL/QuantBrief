@@ -1,7 +1,14 @@
 import { useAuthStore } from '../stores/authStore'
 import type { Brief } from '../stores/briefStore'
 
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
+export function resolveStaticUrl(path: string): string {
+  if (!path || path.startsWith('http')) return path
+  const base = import.meta.env.VITE_API_URL || ''
+  const origin = base.replace(/\/api$/, '')
+  return origin ? `${origin}${path}` : path
+}
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem('qb_token')

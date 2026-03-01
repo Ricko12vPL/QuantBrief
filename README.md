@@ -30,6 +30,14 @@
 </p>
 
 <p align="center">
+  <a href="https://frontend-omega-seven-11mo2mlvze.vercel.app"><img src="https://img.shields.io/badge/🚀_Live_Demo-FF7000?style=for-the-badge&labelColor=0a0a0a" alt="Live Demo" height="32"/></a>
+</p>
+
+<p align="center">
+  <em>⚠️ Temporary hackathon URL — may be taken down after judging.</em>
+</p>
+
+<p align="center">
   <img src="screenshot.png" alt="QuantBrief — AI-Powered Market Intelligence" width="100%"/>
 </p>
 
@@ -101,6 +109,7 @@ Full UI and audio briefings in **English, French, German, Polish, Spanish**. Lev
 
 ### Production-Ready Infrastructure
 
+- **Deployed** — Frontend on **Vercel**, Backend on **Railway** (PostgreSQL + Redis)
 - **JWT Authentication** — access/refresh tokens, bcrypt password hashing, secure login/register flow
 - **PostgreSQL** — persistent storage for users, briefs, portfolios, watchlists, schedules
 - **Rate Limiting** — per-endpoint limits (SlowAPI) to prevent abuse
