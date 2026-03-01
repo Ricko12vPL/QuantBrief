@@ -29,6 +29,10 @@
   Built for <strong>Mistral AI Worldwide Hackathon 2026</strong> &middot; Track: <strong>Anything Goes</strong> &middot; <strong>Kacper Saks</strong> (solo)
 </p>
 
+<p align="center">
+  <img src="screenshot.png" alt="QuantBrief — AI-Powered Market Intelligence" width="100%"/>
+</p>
+
 ---
 
 ## The Problem
