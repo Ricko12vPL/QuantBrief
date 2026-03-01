@@ -510,7 +510,8 @@ Not a prototype — production infrastructure with JWT auth, PostgreSQL persiste
 |---|---|
 | **Hackathon** | Mistral AI Worldwide Hackathon 2026 |
 | **Track** | Anything Goes |
-| **Team** | Kacper Saks |
+| **Team** | [Kacper Saks](https://kacpersaks.dev) |
+| **Company** | [KS Venture Group](https://ksventuregroup.com) |
 | **Location** | Online (Warsaw, Poland) |
 | **Mistral Models** | Mistral Large 3 (256K), Magistral Medium, Ministral 3B |
 | **Sponsor Tech** | ElevenLabs (Voice AI), W&B (Experiment Tracking) |
