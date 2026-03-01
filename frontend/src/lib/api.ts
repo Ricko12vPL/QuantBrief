@@ -96,6 +96,11 @@ export const api = {
       }),
     getRatios: (ticker: string) =>
       fetchJSON<any>(`/market/${ticker}/ratios`),
+    getNews: (ticker: string) =>
+      fetchJSON<{ ticker: string; news: Array<{
+        title: string; publisher: string; link: string; published_at: string;
+        thumbnail: string; sentiment: string; relevance_score: number; summary: string;
+      }> }>(`/market/${ticker}/news`),
   },
   portfolio: {
     get: () => fetchJSON<any>('/portfolio'),

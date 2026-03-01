@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 from pathlib import Path
 
@@ -9,13 +10,16 @@ from pydantic import BaseModel
 from mistralai import Mistral
 
 from app.config import get_settings
-from app.data_sources.yfinance_client import get_candles, get_quotes_batch
+from app.data_sources.yfinance_client import get_candles, get_news, get_quotes_batch
 from app.analytics.technical_signals import get_technical_summary
 from app.analytics.financial_ratios import compute_ratios
+from app.utils.cache import get_cache
 from app.utils.wandb_logger import log_agent_call
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 TECHNICAL_PROMPT_PATH = Path(__file__).parent.parent.parent / "prompts" / "technical_analysis.md"
 
@@ -100,6 +104,106 @@ async def ai_technical_analysis(ticker: str, body: TechnicalAnalysisRequest):
     except Exception as e:
         logger.error("AI technical analysis failed: %s", e)
         return {"ticker": ticker.upper(), "indicators": summary, "ai_analysis": {"error": str(e)}}
+
+
+def _enrich_article(article: dict, ai: dict | None = None) -> dict:
+    """Build enriched article dict from raw news + optional AI analysis."""
+    ai = ai or {}
+    return {
+        "title": article["title"],
+        "publisher": article["publisher"],
+        "link": article["link"],
+        "published_at": article["published_at"],
+        "thumbnail": article.get("thumbnail", ""),
+        "sentiment": ai.get("sentiment", "neutral"),
+        "relevance_score": ai.get("relevance_score", 0.5),
+        "summary": ai.get("summary", article.get("summary", "")),
+    }
+
+
+@router.get("/{ticker}/news")
+async def get_ticker_news(ticker: str):
+    """Fetch news for a ticker and run Ministral 3B sentiment analysis."""
+    ticker_upper = ticker.upper()
+    if not TICKER_RE.match(ticker_upper):
+        return {"ticker": ticker_upper, "news": [], "error": "Invalid ticker format"}
+
+    # Check enriched cache first to avoid redundant LLM calls
+    settings = get_settings()
+    cache = get_cache(settings.redis_url)
+    cache_key = f"sentiment:news:{ticker_upper}"
+    cached = await cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    articles = await get_news(ticker_upper)
+    if not articles:
+        return {"ticker": ticker_upper, "news": []}
+
+    # Build compact article list for the LLM
+    article_inputs = [
+        {"index": i, "title": a["title"], "summary": a.get("summary", "")[:300]}
+        for i, a in enumerate(articles)
+    ]
+
+    start = time.time()
+    try:
+        client = Mistral(api_key=settings.mistral_api_key)
+        response = await client.chat.complete_async(
+            model=settings.model_screening,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a financial news sentiment analyst. For each article, return JSON with:\n"
+                        '{"articles": [{"index": 0, "sentiment": "bullish"|"bearish"|"neutral", '
+                        '"relevance_score": 0.0-1.0, "summary": "one-line summary"}]}\n'
+                        "relevance_score reflects market impact (>0.7 = critical). Be precise and factual."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Analyze sentiment for {ticker_upper} news:\n{json.dumps(article_inputs)}",
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.1,
+        )
+
+        latency = (time.time() - start) * 1000
+        result_text = response.choices[0].message.content or "{}"
+        usage = response.usage
+        log_agent_call(
+            agent_name="news_sentiment",
+            model=settings.model_screening,
+            input_tokens=usage.prompt_tokens if usage else 0,
+            output_tokens=usage.completion_tokens if usage else 0,
+            latency_ms=latency,
+        )
+
+        parsed = json.loads(result_text)
+        ai_articles = parsed.get("articles", [])
+
+        # Merge AI results with raw news data (defensive index access)
+        ai_by_index = {
+            a.get("index"): a
+            for a in ai_articles
+            if isinstance(a, dict) and "index" in a
+        }
+        enriched = [
+            _enrich_article(article, ai_by_index.get(i))
+            for i, article in enumerate(articles)
+        ]
+
+        result = {"ticker": ticker_upper, "news": enriched}
+        await cache.set(cache_key, result, ttl=300)
+        return result
+
+    except Exception as e:
+        logger.error("News sentiment analysis failed for %s: %s", ticker_upper, e)
+        # Return raw news without AI enrichment on failure
+        fallback = [_enrich_article(a) for a in articles]
+        return {"ticker": ticker_upper, "news": fallback}
 
 
 @router.get("/{ticker}/ratios")

@@ -111,5 +111,14 @@
   "ticker": "Ticker",
   "no_watchlist": "Add tickers to your watchlist to track prices",
   "validation_shares_price": "Enter shares and average price",
-  "demo_data_portfolio": "Demo mode — positions stored locally"
+  "demo_data_portfolio": "Demo mode — positions stored locally",
+  "news_sentiment": "News Sentiment",
+  "news_critical_only": "Critical Only",
+  "news_high_impact": "High Impact",
+  "news_no_news": "No news available",
+  "news_load_failed": "Failed to load news",
+  "news_just_now": "just now",
+  "news_minutes_ago": "{{count}}m ago",
+  "news_hours_ago": "{{count}}h ago",
+  "news_days_ago": "{{count}}d ago"
 }

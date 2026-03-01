@@ -140,6 +140,52 @@ def _fetch_candles_sync(ticker: str, resolution: str, days: int) -> list[dict]:
     return candles
 
 
+async def get_news(ticker: str) -> list[dict]:
+    """Get recent news for a ticker via yfinance."""
+    cache = _get_cache()
+    cache_key = f"yf:news:{ticker}"
+    cached = await cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        news = await asyncio.to_thread(_fetch_news_sync, ticker)
+        await cache.set(cache_key, news, ttl=300)
+        return news
+    except Exception as e:
+        logger.error("yfinance news failed for %s: %s", ticker, e)
+        return []
+
+
+def _fetch_news_sync(ticker: str) -> list[dict]:
+    t = yf.Ticker(ticker)
+    raw_news = t.news or []
+    articles = []
+    for item in raw_news:
+        content = item.get("content", {})
+        thumbnail_url = ""
+        thumbnail = content.get("thumbnail")
+        if thumbnail and isinstance(thumbnail, dict):
+            resolutions = thumbnail.get("resolutions", [])
+            if resolutions:
+                thumbnail_url = resolutions[0].get("url", "")
+
+        pub_date = content.get("pubDate", "")
+        articles.append({
+            "title": content.get("title", item.get("title", "")),
+            "publisher": content.get("provider", {}).get("displayName", ""),
+            "link": content.get("canonicalUrl", {}).get("url", item.get("link", "")),
+            "published_at": pub_date,
+            "summary": content.get("summary", ""),
+            "related_tickers": [
+                tk.get("symbol", "")
+                for tk in content.get("finance", {}).get("stockTickers", [])
+            ],
+            "thumbnail": thumbnail_url,
+        })
+    return articles
+
+
 async def get_company_overview(ticker: str) -> dict:
     """Get company fundamentals mapped to Alpha Vantage field names for backward compatibility."""
     cache = _get_cache()

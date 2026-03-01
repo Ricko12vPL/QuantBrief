@@ -19,6 +19,7 @@ import PriceChart from './components/Dashboard/PriceChart'
 import SentimentGauge from './components/Analysis/SentimentGauge'
 import RatioComparison from './components/Analysis/RatioComparison'
 import TechnicalAnalysis from './components/Analysis/TechnicalAnalysis'
+import NewsSentiment from './components/Analysis/NewsSentiment'
 import FilingViewer from './components/Analysis/FilingViewer'
 import ReasoningChain from './components/Analysis/ReasoningChain'
 import AudioPlayer from './components/Audio/AudioPlayer'
@@ -199,6 +200,7 @@ function App() {
                     <div key={ticker} className="space-y-4">
                       <PriceChart ticker={ticker} />
                       <TechnicalAnalysis ticker={ticker} />
+                      <NewsSentiment ticker={ticker} />
                     </div>
                   ))}
                 </div>

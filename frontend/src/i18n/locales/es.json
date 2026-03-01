@@ -109,5 +109,14 @@
   "price": "Precio",
   "change": "Cambio",
   "ticker": "Símbolo",
-  "no_watchlist": "Añade símbolos a tu lista de seguimiento"
+  "no_watchlist": "Añade símbolos a tu lista de seguimiento",
+  "news_sentiment": "Sentimiento de Noticias",
+  "news_critical_only": "Solo Criticos",
+  "news_high_impact": "Alto Impacto",
+  "news_no_news": "Sin noticias disponibles",
+  "news_load_failed": "Error al cargar las noticias",
+  "news_just_now": "ahora mismo",
+  "news_minutes_ago": "hace {{count}}min",
+  "news_hours_ago": "hace {{count}}h",
+  "news_days_ago": "hace {{count}}d"
 }
