@@ -91,9 +91,9 @@ Automatic recurring analysis — no manual clicking required:
 - **Concurrency-safe**: Shared asyncio lock prevents overlapping pipeline runs
 - **Persistent**: Schedules survive server restarts (PostgreSQL-backed)
 
-### Earnings Call Analysis (Voxtral)
+### Earnings Call Analysis
 
-Upload earnings call audio files — Voxtral transcribes, Mistral Large 3 extracts financial highlights, forward guidance, risk factors, and Q&A insights.
+Upload earnings call audio files — Mistral multimodal transcribes (Voxtral-ready via env config), Mistral Large 3 extracts financial highlights, forward guidance, risk factors, and Q&A insights.
 
 ### Real-Time Market Data
 
@@ -325,7 +325,7 @@ QuantBrief/
 │   │   │   ├── reasoning_engine.py     # Magistral — chain-of-thought reasoning
 │   │   │   ├── synthesizer.py          # Mistral Large 3 — brief generation
 │   │   │   ├── voice_agent.py          # ElevenLabs TTS
-│   │   │   └── earnings_transcriber.py # Voxtral earnings call analysis
+│   │   │   └── earnings_transcriber.py # Multimodal earnings call analysis
 │   │   │
 │   │   ├── api/                        # 25+ REST + WebSocket endpoints
 │   │   │   ├── routes_auth.py          # Register, login, refresh, me
@@ -489,9 +489,9 @@ Not a prototype — production infrastructure with JWT auth, PostgreSQL persiste
 
 | Metric | Value |
 |---|---|
-| Total lines of code | ~15,000 |
+| Total lines of code | ~13,500 |
 | Backend Python files | 67 |
-| Frontend TypeScript files | 35 |
+| Frontend TypeScript files | 36 |
 | React components | 20+ |
 | API endpoints | 25+ |
 | Database tables | 6 |
@@ -526,6 +526,8 @@ Not a prototype — production infrastructure with JWT auth, PostgreSQL persiste
 | **Sponsor Tech** | ElevenLabs (Voice AI), W&B (Experiment Tracking) |
 | **Data Sources** | SEC EDGAR, yfinance, Finnhub, FRED, RSS |
 | **Repo** | [github.com/Ricko12vPL/QuantBrief](https://github.com/Ricko12vPL/QuantBrief) |
+| **Live Demo** | [frontend-omega-seven-11mo2mlvze.vercel.app](https://frontend-omega-seven-11mo2mlvze.vercel.app) *(temporary)* |
+| **Deployment** | Frontend: Vercel, Backend: Railway (PostgreSQL + Redis) |
 
 ---
 
