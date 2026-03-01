@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  Built for <strong>Mistral AI Worldwide Hackathon 2026</strong> &middot; Track: <strong>Anything Goes</strong> &middot; <strong>Kacper Saks</strong> (solo)
+  Built for <strong>Mistral AI Worldwide Hackathon 2026</strong> &middot; Track: <strong>Anything Goes</strong> &middot; <strong>Kacper Saks</strong>
 </p>
 
 <p align="center">
@@ -510,7 +510,7 @@ Not a prototype — production infrastructure with JWT auth, PostgreSQL persiste
 |---|---|
 | **Hackathon** | Mistral AI Worldwide Hackathon 2026 |
 | **Track** | Anything Goes |
-| **Team** | Kacper Saks (solo) |
+| **Team** | Kacper Saks |
 | **Location** | Online (Warsaw, Poland) |
 | **Mistral Models** | Mistral Large 3 (256K), Magistral Medium, Ministral 3B |
 | **Sponsor Tech** | ElevenLabs (Voice AI), W&B (Experiment Tracking) |

@@ -1,0 +1,25 @@
+{
+  "name": "quantbrief",
+  "version": "1.0.0",
+  "description": "AI-Powered Market Intelligence Agent",
+  "private": true,
+  "scripts": {
+    "demo": "npx playwright test demo-video/e2e/record-demo.ts",
+    "demo:convert": "ffmpeg -i test-results/demo-recording-QuantBrief-Demo-Recording/video.webm -c:v libx264 -crf 18 -preset slow -vf fps=30 -pix_fmt yuv420p demo-video/demo.mp4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ricko12vPL/QuantBrief.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Ricko12vPL/QuantBrief/issues"
+  },
+  "homepage": "https://github.com/Ricko12vPL/QuantBrief#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
