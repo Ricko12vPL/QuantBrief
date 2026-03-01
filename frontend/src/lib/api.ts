@@ -52,9 +52,22 @@ async function handle401Retry(url: string, options: RequestInit | undefined, hea
     const retryResp = await fetch(`${BASE_URL}${url}`, { ...options, headers: retryHeaders })
     if (retryResp.ok) return retryResp
     const err = await retryResp.json().catch(() => ({ detail: retryResp.statusText }))
-    throw new Error(err.detail || 'Request failed')
+    throw new Error(extractErrorMessage(err))
   }
   handleSessionExpired()
+}
+
+function extractErrorMessage(err: Record<string, unknown>): string {
+  const detail = err.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0]
+    if (typeof first === 'object' && first !== null && 'msg' in first) {
+      return String(first.msg)
+    }
+    return String(first)
+  }
+  return 'Request failed'
 }
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
@@ -73,7 +86,7 @@ async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ detail: resp.statusText }))
-    throw new Error(err.detail || 'Request failed')
+    throw new Error(extractErrorMessage(err))
   }
   return resp.json()
 }
@@ -93,7 +106,7 @@ async function authFormFetch<T>(url: string, options: RequestInit): Promise<T> {
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ detail: resp.statusText }))
-    throw new Error(err.detail || 'Request failed')
+    throw new Error(extractErrorMessage(err))
   }
   return resp.json()
 }

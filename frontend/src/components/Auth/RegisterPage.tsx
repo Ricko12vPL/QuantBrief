@@ -74,9 +74,10 @@ export default function RegisterPage() {
             <div>
               <label className="mb-1 block text-sm text-zinc-400">{t('email')}</label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="anything@example"
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-white placeholder-zinc-500 outline-none focus:border-orange-500"
                 required
               />

@@ -34,7 +34,8 @@
 </p>
 
 <p align="center">
-  <em>⚠️ Temporary hackathon URL — may be taken down after judging.</em>
+  <em>⚠️ Temporary hackathon URL — may be taken down after judging.</em><br/>
+  <em>To register, enter any email and password (min. 8 chars) — no real email required.</em>
 </p>
 
 <p align="center">
