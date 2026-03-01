@@ -27,6 +27,7 @@ import TranscriptView from './components/Audio/TranscriptView'
 import EarningsCallUpload from './components/Analysis/EarningsCallUpload'
 import AgentStatusBar from './components/Common/AgentStatusBar'
 import WatchlistManager from './components/Common/WatchlistManager'
+import ScheduleManager from './components/Common/ScheduleManager'
 import LanguageSelector from './components/Common/LanguageSelector'
 
 function sentimentToScore(sentiment: string): number {
@@ -250,6 +251,7 @@ function App() {
           <div className="sticky top-[73px] max-h-[calc(100vh-73px)] space-y-4 overflow-y-auto pb-6">
             <PortfolioManager />
             <WatchlistManager />
+            <ScheduleManager />
           </div>
         </aside>
       </div>

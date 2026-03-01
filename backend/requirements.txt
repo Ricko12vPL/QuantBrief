@@ -13,3 +13,4 @@ aiosqlite==0.20.0
 redis==5.2.1
 yfinance>=0.2.40
 pandas>=2.0.0
+apscheduler>=3.10.4

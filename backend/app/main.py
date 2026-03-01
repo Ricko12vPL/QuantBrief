@@ -14,6 +14,8 @@ from app.api.routes_audio import router as audio_router
 from app.api.ws_realtime import router as ws_router
 from app.api.routes_market import router as market_router
 from app.api.routes_portfolio import router as portfolio_router
+from app.api.routes_schedule import router as schedule_router
+from app.services.scheduler import get_scheduler_service
 
 
 @asynccontextmanager
@@ -22,7 +24,10 @@ async def lifespan(app: FastAPI):
     audio_path = Path(settings.audio_dir)
     audio_path.mkdir(parents=True, exist_ok=True)
     init_wandb(project=settings.wandb_project, api_key=settings.wandb_api_key)
+    scheduler_svc = get_scheduler_service()
+    scheduler_svc.start()
     yield
+    scheduler_svc.shutdown()
     wandb_finish()
 
 
@@ -50,6 +55,7 @@ app.include_router(audio_router, prefix="/api/audio", tags=["Audio"])
 app.include_router(ws_router, prefix="/api/ws", tags=["WebSocket"])
 app.include_router(market_router, prefix="/api/market", tags=["Market"])
 app.include_router(portfolio_router, prefix="/api/portfolio", tags=["Portfolio"])
+app.include_router(schedule_router, prefix="/api/schedule", tags=["Schedule"])
 
 
 @app.get("/api/health")

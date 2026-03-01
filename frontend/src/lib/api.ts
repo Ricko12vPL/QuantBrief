@@ -117,4 +117,28 @@ export const api = {
     remove: (ticker: string) =>
       fetchJSON<any>(`/portfolio/${ticker}`, { method: 'DELETE' }),
   },
+  schedule: {
+    list: () => fetchJSON<any>('/schedule'),
+    create: (input: {
+      name?: string
+      ticker_source?: string
+      tickers?: string[]
+      frequency?: string
+      hour?: number
+      minute?: number
+      day_of_week?: number
+      language?: string
+      generate_audio?: boolean
+    }) =>
+      fetchJSON<any>('/schedule', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    remove: (id: string) =>
+      fetchJSON<any>(`/schedule/${id}`, { method: 'DELETE' }),
+    pause: (id: string) =>
+      fetchJSON<any>(`/schedule/${id}/pause`, { method: 'POST' }),
+    resume: (id: string) =>
+      fetchJSON<any>(`/schedule/${id}/resume`, { method: 'POST' }),
+  },
 }

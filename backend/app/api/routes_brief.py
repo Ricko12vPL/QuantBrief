@@ -7,6 +7,7 @@ from app.agents.orchestrator import PipelineOrchestrator
 from app.api.ws_realtime import broadcast_progress
 from app.config import get_settings
 from app.models.brief import IntelligenceBrief
+from app.services.scheduler import get_scheduler_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -37,7 +38,9 @@ class GenerateBriefRequest(BaseModel):
 
 # In-memory store for hackathon
 _briefs: list[IntelligenceBrief] = []
-_generating = False
+
+# Share the briefs list with the scheduler so scheduled runs are visible
+get_scheduler_service()._briefs = _briefs
 
 
 @router.get("/latest")
@@ -55,29 +58,27 @@ async def generate_brief(body: GenerateBriefRequest) -> dict:
     if not settings.mistral_api_key:
         raise HTTPException(status_code=503, detail="Mistral API key not configured")
 
-    global _generating
-    if _generating:
+    svc = get_scheduler_service()
+    if svc._lock.locked():
         raise HTTPException(status_code=429, detail="Pipeline already running")
 
     tickers = body.tickers or ["NVDA", "AAPL", "MSFT"]
-    _generating = True
-    try:
-        orchestrator = PipelineOrchestrator()
-        orchestrator.on_progress(broadcast_progress)
-        brief = await orchestrator.run(
-            tickers=tickers,
-            language=body.language,
-            generate_audio=body.generate_audio,
-        )
-        _briefs.append(brief)
-        if len(_briefs) > 100:
-            _briefs[:] = _briefs[-100:]
-        return {"brief": brief.model_dump(mode="json")}
-    except Exception as e:
-        logger.error("Brief generation failed: %s", e)
-        raise HTTPException(status_code=500, detail="Brief generation failed")
-    finally:
-        _generating = False
+    async with svc._lock:
+        try:
+            orchestrator = PipelineOrchestrator()
+            orchestrator.on_progress(broadcast_progress)
+            brief = await orchestrator.run(
+                tickers=tickers,
+                language=body.language,
+                generate_audio=body.generate_audio,
+            )
+            _briefs.append(brief)
+            if len(_briefs) > 100:
+                _briefs[:] = _briefs[-100:]
+            return {"brief": brief.model_dump(mode="json")}
+        except Exception as e:
+            logger.error("Brief generation failed: %s", e)
+            raise HTTPException(status_code=500, detail="Brief generation failed")
 
 
 @router.get("/history")
