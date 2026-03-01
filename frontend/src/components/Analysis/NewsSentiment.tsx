@@ -98,10 +98,15 @@ export default function NewsSentiment({ ticker }: NewsSentimentProps) {
   const [error, setError] = useState<string | null>(null)
   const [criticalOnly, setCriticalOnly] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
+  const [prevTicker, setPrevTicker] = useState(ticker)
+  if (ticker !== prevTicker) {
+    setPrevTicker(ticker)
     setLoading(true)
     setError(null)
+  }
+
+  useEffect(() => {
+    let cancelled = false
 
     api.market
       .getNews(ticker)

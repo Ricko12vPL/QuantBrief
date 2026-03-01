@@ -73,10 +73,17 @@ export default function PriceChart({ ticker }: PriceChartProps) {
     return candles
   }
 
+  const [prevTicker, setPrevTicker] = useState(ticker)
+  const [prevInterval, setPrevInterval] = useState(interval)
+  if (ticker !== prevTicker || interval !== prevInterval) {
+    setPrevTicker(ticker)
+    setPrevInterval(interval)
+    setLoading(true)
+  }
+
   // Fetch candle data
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     const config = INTERVAL_CONFIG[interval]
     api.market
       .getCandles(ticker, config.resolution, config.days)

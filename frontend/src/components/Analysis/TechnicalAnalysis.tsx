@@ -87,10 +87,15 @@ export default function TechnicalAnalysis({ ticker }: TechnicalAnalysisProps) {
   const [showNote, setShowNote] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let cancelled = false
+  const [prevTicker, setPrevTicker] = useState(ticker)
+  if (ticker !== prevTicker) {
+    setPrevTicker(ticker)
     setLoading(true)
     setAiAnalysis(null)
+  }
+
+  useEffect(() => {
+    let cancelled = false
     api.market
       .getTechnical(ticker)
       .then((result) => {
